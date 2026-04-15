@@ -2,7 +2,7 @@
 
 This repository contains two composable skills for stable, long-running AI collaboration:
 
-- `agent-drift-guard`: lightweight drift prevention and alignment guardrails for normal multi-turn work
+- `agent-drift-guard` (`adg`): lightweight drift prevention and alignment guardrails for normal multi-turn work
 - `context-continuity-anchor` (`cca`): stateful continuation, handoff, and recovery for long-running or cross-window tasks
 
 ## How they work together
@@ -23,7 +23,10 @@ Upgrade to `context-continuity-anchor` when:
 3. Start with `agent-drift-guard` for normal multi-turn work.
 4. Switch to `context-continuity-anchor` when the task needs stronger stateful continuation.
 
-The second skill keeps `alias: cca`, so it can still be invoked as `cca`.
+These skills keep short aliases for invocation:
+
+- `agent-drift-guard` -> `adg`
+- `context-continuity-anchor` -> `cca`
 
 ## Repository layout
 
@@ -46,4 +49,7 @@ Each skill is designed to live in its own folder under a Codex skills directory:
 - `agent-drift-guard`
 - `context-continuity-anchor`
 
-The `context-continuity-anchor` skill keeps `alias: cca`, so it can still be invoked as `cca`.
+Invocation aliases:
+
+- `agent-drift-guard` can be invoked as `adg`
+- `context-continuity-anchor` can be invoked as `cca`
