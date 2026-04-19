@@ -1,58 +1,58 @@
-# Drift Guard and Handoff Skills for Long-Running Agents
+# 面向长时运行代理的漂移防护与交接技能
 
-This repository publishes two Codex skills for stable, long-running AI collaboration:
+本仓库发布了两个用于稳定、长时运行 AI 协作的 Codex skill：
 
-- `agent-drift-guard` (`adg`): lightweight guardrails for normal multi-turn work
-- `context-continuity-anchor` (`cca`): stateful continuation, handoff, and recovery for work that must survive beyond the current chat
+- `agent-drift-guard`（`adg`）：为常规多轮工作提供轻量护栏
+- `context-continuity-anchor`（`cca`）：为必须在当前聊天之外继续存在的工作提供有状态的延续、交接与恢复能力
 
-## How to use them
+## 如何使用
 
-Default to `agent-drift-guard`.
+默认使用 `agent-drift-guard`。
 
-Switch to `context-continuity-anchor` when:
+在以下情况切换到 `context-continuity-anchor`：
 
-- the task must survive across multiple rounds, windows, or a new conversation
-- important state should not live only in chat history
-- the main blockage is about continuity, scope, state, or boundary handling
-- you need to take over an already-running discussion mid-stream
+- 任务必须跨多轮、跨窗口或跨新对话继续存在
+- 重要状态不应只存活在聊天历史中
+- 主要阻塞点与连续性、范围、状态或边界处理有关
+- 你需要在中途接管一个已经在运行的讨论
 
-## Why these skills exist
+## 为什么会有这些 skill
 
-Most skills add domain knowledge, workflows, or tool usage.
+大多数 skill 都是在增加领域知识、工作流或工具使用能力。
 
-These two skills solve a different problem: keeping long-running collaboration stable when the failure mode is drift or broken continuity rather than missing capability.
+这两个 skill 解决的是另一类问题：当失败模式不是能力缺失，而是漂移或连续性断裂时，如何让长时运行协作保持稳定。
 
-- `agent-drift-guard` is necessary when the problem is not lack of capability, but drift during normal multi-turn work. It helps keep confirmed facts, assumptions, pending items, and user intent from silently collapsing into each other.
-- `context-continuity-anchor` is necessary when the task must survive beyond the current chat. It provides explicit continuation, handoff, and recovery across long tasks, cross-window work, or a new conversation.
+- 当问题不在于能力不足，而在于常规多轮工作中发生漂移时，就需要 `agent-drift-guard`。它有助于防止已确认事实、假设、待处理事项和用户意图在无声中彼此混淆。
+- 当任务必须在当前聊天之外继续存在时，就需要 `context-continuity-anchor`。它为长任务、跨窗口工作或新对话提供显式的延续、交接与恢复机制。
 
-In short:
+简而言之：
 
-- most skills help an agent do more
-- `adg` helps an agent stay aligned while doing it
-- `cca` helps an agent continue coherently when the work outgrows chat-only memory or moves into a new conversation
+- 大多数 skill 是帮助 agent 做更多事情
+- `adg` 是帮助 agent 在做事时保持对齐
+- 当工作超出仅靠聊天记忆所能承载，或转移到新对话中时，`cca` 能帮助 agent 连贯地继续推进
 
-## Install
+## 安装
 
-Install both folders under your Codex skills directory:
+将这两个文件夹安装到你的 Codex skills 目录下：
 
 - `skills/agent-drift-guard/`
 - `skills/context-continuity-anchor/`
 
-Invocation aliases:
+调用别名：
 
 - `agent-drift-guard` -> `adg`
 - `context-continuity-anchor` -> `cca`
 
-## Repository layout
+## 仓库结构
 
-- `skills/agent-drift-guard/`: lightweight guardrails and upgrade routing
-- `skills/context-continuity-anchor/`: system rules, layered continuation model, and instance scaffold
+- `skills/agent-drift-guard/`：轻量护栏与升级路由
+- `skills/context-continuity-anchor/`：系统规则、分层延续模型与实例脚手架
 
-## Publishing boundary
+## 发布边界
 
-This repository does not publish local working material:
+本仓库不会发布本地工作材料：
 
-- `refactor-work/` is local-only refactor state
-- real local instances such as `personal-design-portrait` are not part of the published skill set
+- `refactor-work/` 是仅供本地使用的重构状态
+- `personal-design-portrait` 这类真实本地实例不属于已发布的 skill 集合
 
-`refactor-work/` is ignored by `.gitignore` to reduce accidental commits.
+为减少误提交，`.gitignore` 会忽略 `refactor-work/`。
