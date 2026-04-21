@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "task_key": "<task-key>",
+  "formal_state_root": ".cca-state/<task-key>",
+  "active_mode": "guard-mode",
+  "active_packs": [],
+  "last_handoff": null,
+  "superseded_roots": [],
+  "integrity_status": "ok"
+}

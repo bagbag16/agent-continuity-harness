@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "bindings": {
+    "<task-key>": {
+      "formal_state_root": "<path-to-formal-state-root>"
+    }
+  }
+}
