@@ -1,0 +1,4 @@
+interface:
+  display_name: "ACH"
+  short_description: "Canonical short-name entry for guard/continuity routing"
+  default_prompt: "Use $ach as the public ACH entry, start in guard-mode by default, and enter continuity-mode only when continuity conditions are met."

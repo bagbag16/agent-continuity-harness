@@ -1,4 +1,0 @@
-interface:
-  display_name: "Agent Continuity Harness"
-  short_description: "Compatibility long-name entry for the ACH wrapper"
-  default_prompt: "Use $agent-continuity-harness as the long-form compatibility entry for ACH and decide whether this task should stay in guard-mode or enter continuity-mode."

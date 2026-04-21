@@ -1,15 +1,16 @@
 # Agent Continuity Harness（ACH）
 
-本仓库当前对外以正式短名入口 `ach`（`ACH`）组织，并由两个内部 skill 提供核心能力：
+本仓库当前对外发布的是一个单 skill 产物：`ach`（`ACH`）。
 
-- `ach`（`ACH`）：首选公开 wrapper；负责统一入口、模式路由与最小使用心智
-- `agent-continuity-harness`：`ACH` 的兼容长名入口；与 `ach` 共享同一套 wrapper 协议
+内部能力仍然分成两个模块：
+
 - `agent-drift-guard`（`adg`）：内部 `guard-mode` 核心；负责轻量守卫、漂移控制与升级判断
 - `context-continuity-anchor`（`cca`）：内部 `continuity-mode` 核心；负责正式状态、交接与恢复能力
 
 ## 如何使用
 
-默认始终从 `ach` 进入；若你已经在旧文档或旧脚本里使用 `agent-continuity-harness`，它仍可继续作为兼容长名入口。
+默认始终从 `ach` 进入。
+对用户而言，不再需要分别安装 `adg`、`cca` 或 `agent-continuity-harness`。
 
 当出现以下情况时，由 `ACH` 通过 `adg` 升级并转入 `cca` 提供的 continuity 模式：
 
@@ -25,7 +26,7 @@
 
 大多数 skill 都是在增加领域知识、工作流或工具使用能力。
 
-这三个 skill 解决的是另一类问题：当失败模式不是能力缺失，而是漂移或连续性断裂时，如何让长时运行协作保持稳定。
+这套系统解决的是另一类问题：当失败模式不是能力缺失，而是漂移或连续性断裂时，如何让长时运行协作保持稳定。
 
 - 当问题不在于能力不足，而在于常规多轮工作中发生漂移时，就需要 `agent-drift-guard`。它有助于防止已确认事实、假设、待处理事项和用户意图在无声中彼此混淆。
 - 当任务必须在当前聊天之外继续存在时，就需要 `context-continuity-anchor`。它为长任务、跨窗口工作或新对话提供显式的延续、交接与恢复机制。
@@ -33,47 +34,50 @@
 简而言之：
 
 - 大多数 skill 是帮助 agent 做更多事情
-- `ACH` 是默认公开入口和协作 wrapper
-- `adg` 是 `ACH` 内部的轻量守卫核心
-- `cca` 是 `ACH` 内部的 continuity engine
+- `ACH` 是唯一公开入口和协作 wrapper
+- `adg` 是 `ACH` 内部的轻量守卫模块
+- `cca` 是 `ACH` 内部的 continuity 模块
 - 当工作超出仅靠聊天记忆所能承载，或转移到新对话中时，由 `ACH` 路由进入 `cca` 承接正式状态与恢复
 
 ## 安装
 
-将这四个文件夹安装到你的 Codex skills 目录下：
+安装 `dist/ach/` 到你的 Codex skills 目录下即可。
 
-- `skills/ach/`
-- `skills/agent-continuity-harness/`
-- `skills/agent-drift-guard/`
-- `skills/context-continuity-anchor/`
-
-当前公开入口与文档简称：
+当前安装名和简称如下：
 
 - `ach`：正式短名入口，对外简称 `ACH`
-- `agent-continuity-harness`：简称 `ACH`
-- `agent-drift-guard`：简称 `adg`
-- `context-continuity-anchor`：简称 `cca`
-
-当前不再依赖 alias 机制来实现 `ACH` 唤起。
-若要按正式 skill 名显式唤起，优先使用：
-
-- `ach`
-- `agent-continuity-harness`
-- `agent-drift-guard`
-- `context-continuity-anchor`
+- `Agent Continuity Harness`：`ACH` 的全称，用于文档和产品语义
+- `adg`：内部 guard 模块名
+- `cca`：内部 continuity 模块名
 
 ## 仓库结构
 
-- `skills/ach/`：正式短名公开入口
-- `skills/agent-continuity-harness/`：兼容长名 wrapper、模式路由与统一入口说明
-- `skills/agent-drift-guard/`：内部 guard 核心、轻量护栏与升级判断
-- `skills/context-continuity-anchor/`：内部 continuity engine、系统规则与状态恢复机制
+- `src/ach/`：唯一源码真源
+- `src/ach/adg/`：内部 guard 模块源码
+- `src/ach/cca/`：内部 continuity 模块源码
+- `dist/ach/`：唯一对外发布产物
+- `scripts/build-ach-bundle.ps1`：从 `src/ach` 生成 `dist/ach`
+- `scripts/validate-ach-bundle.ps1`：校验 `dist/ach` 是否为合法单 skill 产物
+- `scripts/validate-ach-repo.ps1`：串联源码、构建与 bundle 校验
+- `scripts/check-cca-state.ps1`：单独校验本地 `.cca-state/` 与 `.cca-bindings.json`
 
-当前仓库中的已发布核心包括 `ACH` 及其依赖的两个内部 skill。
+当前仓库中的已发布核心只有 `ACH`。
 若后续引入设计、研究、写作等专项增强，应优先作为与核心分离的 capability packs 处理，而不是继续把领域规则混写进 `ACH/adg/cca` 正文。
+
+## 开发流程
+
+默认开发顺序：
+
+1. 修改 `src/ach/...`
+2. 运行 `scripts/build-ach-bundle.ps1`
+3. 运行 `scripts/validate-ach-bundle.ps1`
+4. 需要仓库发布校验时，运行 `scripts/validate-ach-repo.ps1`
+5. 需要校验本地正式状态时，再单独运行 `scripts/check-cca-state.ps1`
+
+`dist/ach/` 是构建产物，不应手工维护。
 
 ## 发布边界
 
-本仓库只发布 skills、模板脚手架与通用校验脚本。
+本仓库只发布单 skill 产物、模板脚手架与通用校验脚本。
 
 本地任务状态、绑定索引、重构工作材料与个人开发器配置不纳入版本库，并由 `.gitignore` 忽略。

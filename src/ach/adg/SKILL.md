@@ -1,6 +1,6 @@
 ---
 name: agent-drift-guard
-description: 内部 guard 核心。默认由 agent-continuity-harness 在 guard-mode 中调用；负责轻量守卫、漂移控制、最小外化建议与升级到 context-continuity-anchor 的判断。Use directly only when the user explicitly wants the guard layer without going through the ACH wrapper.
+description: 内部 guard 核心。默认由 ach 在 guard-mode 中调用；负责轻量守卫、漂移控制、最小外化建议与升级到 context-continuity-anchor 的判断。Use directly only when the user explicitly wants the guard layer without going through the ACH wrapper.
 ---
 
 # Agent Drift Guard（复杂多轮协作守卫）
