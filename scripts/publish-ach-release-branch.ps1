@@ -10,6 +10,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 
 $repoRoot = [System.IO.Path]::GetFullPath($WorkspaceRoot)
 $distRoot = Join-Path $repoRoot "dist\ach"
+$releaseReadme = Join-Path $repoRoot "src\ach\README.release.md"
 
 if (-not $ReleaseWorktree) {
     $repoParent = Split-Path -Parent $repoRoot
@@ -25,6 +26,10 @@ if (-not (Test-Path $releaseParent)) {
 }
 
 & (Join-Path $repoRoot "scripts\build-ach-bundle.ps1") -WorkspaceRoot $repoRoot -DistRoot $distRoot | Out-Null
+
+if (-not (Test-Path $releaseReadme)) {
+    throw "Missing release branch README template: $releaseReadme"
+}
 
 $repoGitArgs = @(
     "-c", "safe.directory=$repoRoot",
@@ -48,6 +53,7 @@ foreach ($item in $trackedItems) {
 }
 
 Copy-Item -Recurse -Force (Join-Path $distRoot "*") $releaseWorktree
+Copy-Item -LiteralPath $releaseReadme -Destination (Join-Path $releaseWorktree "README.md") -Force
 
 $releaseGitArgs = @(
     "-c", "safe.directory=$releaseWorktree",
