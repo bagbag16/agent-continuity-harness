@@ -1,16 +1,16 @@
-# Agent Continuity Harness（ACH）
+# Agent Continuity Harness (ACH)
 
-本仓库当前对外发布的是一个单 skill 产物：`ach`（`ACH`）。
+本仓库当前对外只发布一个 skill：`ach`。
 
-内部能力仍然分成两个模块：
+`ACH` 是它的产品简称；内部仍然保留两个模块：
 
-- `agent-drift-guard`（`adg`）：内部 `guard-mode` 核心；负责轻量守卫、漂移控制与升级判断
-- `context-continuity-anchor`（`cca`）：内部 `continuity-mode` 核心；负责正式状态、交接与恢复能力
+- `agent-drift-guard`（`adg`）：内部 `guard-mode` 核心，负责轻量守卫、漂移控制与升级判断
+- `context-continuity-anchor`（`cca`）：内部 `continuity-mode` 核心，负责正式状态、交接与恢复
 
 ## 如何使用
 
 默认始终从 `ach` 进入。
-对用户而言，不再需要分别安装 `adg`、`cca` 或 `agent-continuity-harness`。
+对用户而言，不再需要分别安装 `adg`、`cca`，也不需要再区分旧的多 skill 入口。
 
 当出现以下情况时，由 `ACH` 通过 `adg` 升级并转入 `cca` 提供的 continuity 模式：
 
@@ -20,33 +20,42 @@
 - 你需要在中途接管一个已经在运行的讨论
 
 对外默认不要求用户先判断“现在该用 `ACH`、`adg` 还是 `cca`”。
-默认先进入 `ACH`，再由系统按当前任务状态决定是留在 `guard-mode` 还是进入 continuity 模式。
+你先进入 `ACH`，再由系统按当前任务状态决定是留在 `guard-mode`，还是进入 continuity 模式。
 
-## 为什么会有这些 skill
+## 为什么内部还保留 `adg` 和 `cca`
 
-大多数 skill 都是在增加领域知识、工作流或工具使用能力。
+大多数 skill 解决的是领域知识、工作流或工具使用问题。
 
 这套系统解决的是另一类问题：当失败模式不是能力缺失，而是漂移或连续性断裂时，如何让长时运行协作保持稳定。
 
 - 当问题不在于能力不足，而在于常规多轮工作中发生漂移时，就需要 `agent-drift-guard`。它有助于防止已确认事实、假设、待处理事项和用户意图在无声中彼此混淆。
 - 当任务必须在当前聊天之外继续存在时，就需要 `context-continuity-anchor`。它为长任务、跨窗口工作或新对话提供显式的延续、交接与恢复机制。
 
-简而言之：
+可以把它简单理解成：
 
 - 大多数 skill 是帮助 agent 做更多事情
-- `ACH` 是唯一公开入口和协作 wrapper
+- `ACH` 是唯一公开入口和协作壳层
 - `adg` 是 `ACH` 内部的轻量守卫模块
 - `cca` 是 `ACH` 内部的 continuity 模块
 - 当工作超出仅靠聊天记忆所能承载，或转移到新对话中时，由 `ACH` 路由进入 `cca` 承接正式状态与恢复
 
-## 安装
+## 安装与命名
 
-安装 `dist/ach/` 到你的 Codex skills 目录下即可。
+从 GitHub 获取后，安装 `dist/ach/` 到你的 Codex skills 目录下即可。
 
-当前安装名和简称如下：
+如果你是直接从仓库使用，最短路径是：
 
-- `ach`：正式短名入口，对外简称 `ACH`
-- `Agent Continuity Harness`：`ACH` 的全称，用于文档和产品语义
+1. clone 本仓库
+2. 进入仓库目录
+3. 使用 `dist/ach/` 作为最终安装目录
+
+如果你是仓库维护者或要本地改动源码，则应修改 `src/ach/...`，再重新生成 `dist/ach/`。
+
+当前命名约定如下：
+
+- `ach`：正式安装名，也是默认入口
+- `ACH`：对外简称
+- `Agent Continuity Harness`：完整名称，用于文档与产品语义
 - `adg`：内部 guard 模块名
 - `cca`：内部 continuity 模块名
 
@@ -61,8 +70,8 @@
 - `scripts/validate-ach-repo.ps1`：串联源码、构建与 bundle 校验
 - `scripts/check-cca-state.ps1`：单独校验本地 `.cca-state/` 与 `.cca-bindings.json`
 
-当前仓库中的已发布核心只有 `ACH`。
-若后续引入设计、研究、写作等专项增强，应优先作为与核心分离的 capability packs 处理，而不是继续把领域规则混写进 `ACH/adg/cca` 正文。
+当前仓库唯一对外发布的核心就是 `ACH`。
+若后续引入设计、研究、写作等专项增强，应优先作为与核心分离的 capability packs 处理，而不是继续把领域规则混写进 `ACH / adg / cca` 正文。
 
 ## 开发流程
 
