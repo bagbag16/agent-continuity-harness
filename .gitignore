@@ -1,13 +1,5 @@
-refactor-work/
-.cca-state/
-.cca-bindings.json
+.DS_Store
+Thumbs.db
 .vscode/
 .idea/
 *.code-workspace
-.DS_Store
-Thumbs.db
-*.log
-.env
-.env.*
-!.env.example
-.vendor/
