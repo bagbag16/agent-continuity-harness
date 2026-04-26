@@ -1,10 +1,18 @@
 # Agent Continuity Harness (ACH)
 
-**Keep long-running AI agent work coherent when a task outgrows one chat.**
+**Continuity for AI agent work that outgrows one chat.**
 
-ACH is a continuity harness for long-running AI agent work. It helps an agent keep goals,
-constraints, handoffs, and recovery stable across long conversations, window
-switches, pauses, and mid-task takeovers.
+Long-running agent work usually fails at the handoff point: goals drift,
+assumptions harden into facts, and the next chat cannot recover the real task
+state.
+
+ACH gives Codex one public skill entry, `ach`, that starts lightweight and
+escalates only when the task needs formal continuity state.
+
+```text
+Use ACH for this task. Keep the current goal, confirmed constraints,
+pending items, and handoff state stable across future rounds.
+```
 
 The formal project name is Agent Continuity Harness, with
 `agent-continuity-harness` as the repository slug. `ach` is the short skill name
@@ -16,7 +24,7 @@ when it needs formal continuity state.
 
 ## The Problem
 
-Long-running AI work usually fails quietly:
+Long-running AI work often fails quietly:
 
 - the goal drifts after several rounds
 - assumptions become treated as confirmed facts
@@ -24,8 +32,8 @@ Long-running AI work usually fails quietly:
 - a new chat cannot recover the real task state
 - handoffs depend on whatever happened to remain in chat history
 
-ACH exists for this narrow failure mode: the model can still do the work, but
-the task line is starting to lose continuity.
+ACH exists for this narrow failure mode: the model can still do the next step,
+but the task line is starting to lose continuity.
 
 ## When To Use ACH
 
@@ -56,8 +64,7 @@ skills/
 Then ask Codex to use it:
 
 ```text
-Use ACH for this task. Keep the current goal, confirmed constraints,
-pending items, and handoff state stable across future rounds.
+Use ACH for this task.
 ```
 
 ACH starts in `guard-mode` by default. It enters `continuity-mode` only when the
