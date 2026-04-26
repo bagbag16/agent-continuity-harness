@@ -4,14 +4,14 @@ Use this file when publishing or sharing ACH.
 
 The public message should stay simple:
 
-> ACH is a continuity harness for long-running AI agent work.
+> ACH is continuity for AI agent work that outgrows one chat.
 
 ## GitHub Metadata
 
 Suggested repository description:
 
 ```text
-Continuity harness for long-running AI agent work.
+Continuity for AI agent work that outgrows one chat.
 ```
 
 Suggested topics:
@@ -31,18 +31,17 @@ Social preview direction:
 
 ```text
 ACH
-Continuity harness for long-running AI agent work
+Continuity for AI agent work that outgrows one chat
 Drift control -> handoff -> recovery
 ```
 
 ## Short Launch Post
 
 ```text
-I published ACH: a continuity harness for long-running AI agent work.
+I published ACH: continuity for AI agent work that outgrows one chat.
 
-It is for the point where AI agent work outgrows one chat: goals drift,
-assumptions become facts, handoffs lose state, and the next session has to
-reconstruct what already happened.
+It is for the point where goals drift, assumptions become facts, handoffs lose
+state, and the next session has to reconstruct what already happened.
 
 ACH gives the agent one public entry and two internal modes:
 - stay lightweight by default
