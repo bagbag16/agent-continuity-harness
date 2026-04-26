@@ -1,81 +1,132 @@
 # Agent Continuity Harness (ACH)
 
-**不是让 AI 再多一个 skill。  
-是让长任务协作终于有个不会散架的壳。**
+**Keep long-running AI agent work coherent when a task outgrows one chat.**
 
-大多数 AI 协作的问题，不是模型不会做。  
-而是任务一长、轮次一多、窗口一换，状态就开始漂，边界就开始糊，前面说过的话慢慢失效，后面的人还得重新接。
+ACH is a continuity harness for long-running AI agent work. It helps an agent keep goals,
+constraints, handoffs, and recovery stable across long conversations, window
+switches, pauses, and mid-task takeovers.
 
-`ACH` 就是拿来处理这个问题的。
+The formal project name is Agent Continuity Harness, with
+`agent-continuity-harness` as the repository slug. `ach` is the short skill name
+used to invoke it.
 
-它不是普通 skill 那种“再给模型一段新规则”。  
-它更像一个真正的 **harness**：  
-把原本需要你自己盯着、自己记着、自己续上的那部分协作运行时，收进系统内部。
+It is not another prompt template, agent framework, or memory database. ACH is
+the layer that decides when a normal conversation needs a lightweight guard, and
+when it needs formal continuity state.
 
-所以它处理的不是“多一个能力”，而是这些更真实的问题：
+## The Problem
 
-- 任务还没结束，但上下文已经开始散了
-- 讨论还能继续，但状态已经不该只留在聊天历史里
-- 你还会回来、会切窗、会接管、会中断再继续
-- 真正难的不是回答这一轮，而是别把整条任务线做丢
+Long-running AI work usually fails quietly:
 
-## 什么时候直接用 ACH
+- the goal drifts after several rounds
+- assumptions become treated as confirmed facts
+- old constraints get forgotten after new information appears
+- a new chat cannot recover the real task state
+- handoffs depend on whatever happened to remain in chat history
 
-如果你脑子里冒出来的是这些话，就别再把它当普通聊天用了：
+ACH exists for this narrow failure mode: the model can still do the work, but
+the task line is starting to lose continuity.
 
-- “这个任务后面还要继续，我不想下次回来又重新解释一遍。”
-- “这个讨论已经有点漂了，先别发散，先帮我收边界。”
-- “我准备换窗口继续，你先按现在的状态接住。”
-- “这是个长任务，我之后一定还会回来推进。”
-- “关键约束、待确认项和当前方向不能再混在聊天记录里了。”
+## When To Use ACH
 
-一句话：
+Use ACH when you are thinking:
 
-**短问题用普通对话。  
-长任务、会恢复、会漂移、会接管的任务，直接用 `ACH`。**
+- "This task will continue later, and I do not want to re-explain it."
+- "The conversation is starting to drift; first stabilize the boundary."
+- "I need to move this work into a new chat without losing state."
+- "The current goal, constraints, and open questions must not stay only in chat."
+- "Someone else may need to take over this task from the current point."
 
-## 为什么它是 Harness
+Do not use ACH for one-shot questions, simple edits, short lookups, or tasks
+where the next step is already obvious and low-risk.
 
-因为 `ACH` 做的不是单点增强，而是把整段协作过程稳住。
+## Quick Start
 
-在普通对话里，很多事默认都要你自己扛：
+Install the repository as one Codex skill named `ach`.
 
-- 现在还能不能继续往前推
-- 哪些内容已经确认，哪些只是暂时理解
-- 什么时候任务已经开始漂了
-- 哪些状态必须挂住
-- 什么时候该为恢复、交接和 continuity 做准备
+```text
+skills/
+  ach/
+    SKILL.md
+    agents/
+    references/
+    assets/
+```
 
-`ACH` 做的，就是把这些“协作运行时问题”正式接过来：
+Then ask Codex to use it:
 
-- 对外只保留一个入口：`ach`
-- 对内按任务状态在守卫层和 continuity 层之间切换
-- 轻任务保持轻量
-- 长任务才进入正式承接
-- 在真正需要的时候，把状态、恢复和交接抬上台面
+```text
+Use ACH for this task. Keep the current goal, confirmed constraints,
+pending items, and handoff state stable across future rounds.
+```
 
-所以它不是“又一个 skill”。  
-它是让长任务协作真正跑起来的那层壳。
+ACH starts in `guard-mode` by default. It enters `continuity-mode` only when the
+task needs recovery, handoff, a formal state root, or cross-window continuation.
 
-## 安装
+For a fuller setup path, see [quickstart](docs/quickstart.md).
 
-这个仓库根目录本身就是最终安装内容。
+## What You Get
 
-下载后，把整个仓库目录放进你的 Codex skills 目录，并命名为 `ach`。
+ACH has one public entry:
 
-你看到的这些文件，就是最终安装结构：
+- `ach`: the user-facing Agent Continuity Harness
 
-- `SKILL.md`
-- `agents/`
-- `references/`
-- `assets/`
+Internally, ACH has two modes:
 
-## 你实际得到的是什么
+- `guard-mode`: lightweight drift control for normal multi-turn work
+- `continuity-mode`: formal state, handoff, recovery, and cross-window continuation
 
-虽然对外只安装一个 skill，但内部包含两层能力：
+You do not need to choose between internal modules. Ask for ACH, and let the
+harness decide whether the current task should stay lightweight or move into
+formal continuity.
 
-- `adg`：负责轻量守卫、漂移控制、边界收束
-- `cca`：负责正式状态、恢复、交接与 continuity 承接
+## Examples
 
-你不需要单独安装它们，也不需要先判断该选哪一个。  
-你只需要进入 `ACH`，剩下的交给它处理。
+- [Drift recovery](examples/01-drift-recovery.md)
+- [Window handoff](examples/02-window-handoff.md)
+- [Long-task checkpoint](examples/03-long-task-checkpoint.md)
+- [When not to use ACH](examples/04-when-not-to-use.md)
+- [Transcript-style demo](examples/06-transcript-style-demo.md)
+
+Each example shows the failure pattern first, then the ACH behavior that keeps
+the task coherent.
+
+## How ACH Differs
+
+ACH is designed to complement existing AI coding tools and agent workflows.
+
+| Tool or pattern | What it is good at | What ACH adds |
+| --- | --- | --- |
+| `AGENTS.md` | Project-level instructions for coding agents | Runtime continuity rules for long tasks |
+| Prompt templates | Reusable wording | Drift, handoff, and recovery decisions |
+| Agent frameworks | Building and running agents | Collaboration continuity inside agent work |
+| Memory systems | Storing facts or context | Deciding what state must be formalized and when |
+
+See [FAQ](docs/faq.md) for common comparison questions.
+
+## Project
+
+This repository is preparing its first public ACH release. See
+[changelog](CHANGELOG.md) and [contributing](CONTRIBUTING.md).
+
+## Repository Layout
+
+- `SKILL.md`: the public ACH entry.
+- `docs/`: quickstart, FAQ, distribution notes, and reusable project template.
+- `examples/`: before/after examples and a transcript-style demo.
+- `assets/state-templates/`: templates for formal continuity state.
+- `references/`: internal guard and continuity rules used by ACH.
+
+## Design Principles
+
+- One formal project identity: Agent Continuity Harness.
+- One invocation shorthand: `ach`.
+- Lightweight by default.
+- Escalate only when continuity is actually needed.
+- Keep confirmed facts, assumptions, pending items, and decisions distinct.
+- Do not make users choose internal guard or continuity modules manually.
+- Do not create formal state unless the task needs recovery or handoff.
+
+## License
+
+MIT.

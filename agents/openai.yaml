@@ -1,4 +1,4 @@
 interface:
   display_name: "ACH"
-  short_description: "Canonical short-name entry for guard/continuity routing"
-  default_prompt: "Use $ach as the public ACH entry, start in guard-mode by default, and enter continuity-mode only when continuity conditions are met."
+  short_description: "Continuity harness for long-running AI agent work"
+  default_prompt: "Use $ach to keep this long-running task stable. Start in guard-mode, and enter continuity-mode only if handoff, recovery, formal state, or cross-window continuation is needed."
