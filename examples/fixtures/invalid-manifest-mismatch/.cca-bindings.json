@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "bindings": {
+    "manifest-mismatch": {
+      "formal_state_root": ".cca-state/manifest-mismatch"
+    }
+  }
+}

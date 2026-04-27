@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "task_key": "demo-task",
+  "formal_state_root": ".cca-state/demo-task",
+  "active_mode": "continuity-mode",
+  "active_packs": [],
+  "supplemental_documents": [],
+  "last_handoff": null,
+  "superseded_roots": [],
+  "integrity_status": "ok"
+}

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "task_key": "missing-file",
+  "formal_state_root": ".cca-state/missing-file",
+  "active_mode": "continuity-mode",
+  "active_packs": [],
+  "last_handoff": null,
+  "superseded_roots": [],
+  "integrity_status": "ok"
+}

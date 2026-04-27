@@ -45,6 +45,36 @@ one chat.
 - State template README aligned to ACH continuity-mode
 - Skill validation passing
 
+## Current Product Gap
+
+The GitHub surface now covers understand, try, trust, and share at the
+documentation level. The remaining high-star gap is executable proof:
+
+- there is no public `ach` CLI yet
+- the state contract is not backed by public schemas
+- examples cannot be validated by command
+- handoff and resume are not generated from formal state
+- CI cannot fail when ACH state is invalid
+
+This means ACH is understandable, but not yet sufficiently runnable or
+verifiable for a stranger evaluating it as a developer tool.
+
+## Next Productization Target
+
+Build the smallest executable product loop:
+
+```text
+ach init -> ach bind -> ach validate -> ach handoff -> ach preflight
+```
+
+This loop should prove the same public promise already described in the README:
+long-running AI work stays recoverable because state is formalized, validated,
+and used as the source for handoff and resume.
+
+Guard quality remains a secondary product value: ACH should also help prevent
+weak assumptions, flawed paths, or low-agency agreement from becoming inherited
+task state. This supports the continuity promise; it does not replace it.
+
 ## Plan Status
 
 ### Phase 1: Trial Path
@@ -101,3 +131,10 @@ Every new artifact must improve one of four outcomes:
 - share
 
 If an artifact does not improve one of those outcomes, defer it.
+
+For the executable product loop, also check:
+
+- Does it preserve the four-file formal state core?
+- Does it avoid creating a second state protocol?
+- Does it make handoff/resume derive from formal state rather than chat memory?
+- Does it make the project more runnable or verifiable for a new developer?

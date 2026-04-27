@@ -1,14 +1,51 @@
 # Quickstart
 
-This quickstart is the smallest useful ACH trial path: install once, start
-lightweight, and enter continuity only when handoff or recovery needs it.
+This quickstart is the smallest useful ACH trial path: validate a formal state
+root, generate handoff from that state, then install the Codex skill when you
+want conversational continuity rules.
 
 Use ACH when a task is likely to continue across multiple rounds, windows, or
 handoffs. Do not use it for simple one-shot work.
 
-## 1. Install ACH
+## 1. Try The CLI
 
-Install this repository as one Codex skill named `ach`.
+From the repository root:
+
+```bash
+npm test
+node bin/ach.js validate examples/fixtures/valid-basic
+node bin/ach.js handoff demo-task --root examples/fixtures/valid-basic
+```
+
+Expected behavior:
+
+- tests pass
+- the valid fixture validates successfully
+- handoff output says it is derived from the ACH formal state root
+
+For command details, see [CLI](cli.md). For machine-readable failures, see
+[error codes](error-codes.md).
+
+## 2. Create State For A Task
+
+In a workspace where you want durable recovery:
+
+```bash
+node path/to/agent-continuity-harness/bin/ach.js init my-long-task
+node path/to/agent-continuity-harness/bin/ach.js validate --task my-long-task
+node path/to/agent-continuity-harness/bin/ach.js preflight my-long-task
+```
+
+Expected behavior:
+
+- `.cca-bindings.json` is created or updated
+- `.cca-state/my-long-task/` contains the five required state files
+- validation passes before handoff or resume
+
+## 3. Install ACH As A Codex Skill
+
+Install this repository as one Codex skill named `ach` when you want Codex to
+use ACH during conversation.
 
 Your Codex skills directory should contain:
 
@@ -35,7 +72,7 @@ Manual install:
 ACH is installed correctly when Codex recognizes `$ach` or `ach` as the single
 public entry.
 
-## 2. Start With ACH
+## 4. Start With ACH
 
 ```text
 Use ACH for this task. I want the current goal, confirmed constraints,
@@ -50,7 +87,7 @@ Expected behavior:
 - the agent does not create formal state immediately
 - the agent separates confirmed facts from assumptions when needed
 
-## 3. Stabilize Drift
+## 5. Stabilize Drift
 
 Use this when the conversation is becoming broad or inconsistent:
 
@@ -65,8 +102,9 @@ Expected behavior:
 - compact readback of the active task boundary
 - assumptions marked as assumptions
 - next step limited to the stabilized goal
+- obvious flawed paths or weak assumptions are called out before they become inherited state
 
-## 4. Prepare A Handoff
+## 6. Prepare A Handoff
 
 Use this before switching chats or handing the task to another agent:
 
@@ -81,7 +119,7 @@ Expected behavior:
 - existing formal state is reused when valid
 - new formal state is created only when no valid state exists
 
-## 5. Resume Later
+## 7. Resume Later
 
 Start the next chat with:
 
