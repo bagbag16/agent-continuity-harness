@@ -1,8 +1,12 @@
 # Quickstart
 
-This quickstart is the smallest useful ACH trial path: validate a formal state
-root, generate handoff from that state, then install the Codex skill when you
-want conversational continuity rules.
+This quickstart is the smallest useful ACH trial path. ACH has two supported
+surfaces:
+
+- Codex skill: conversation continuity inside Codex.
+- CLI: validateable recovery state in a workspace.
+
+Use either one, or both. For exact install paths, see [install](install.md).
 
 Use ACH when a task is likely to continue across multiple rounds, windows, or
 handoffs. Do not use it for simple one-shot work.
@@ -86,6 +90,9 @@ Manual install:
 
 ACH is installed correctly when Codex recognizes `$ach` or `ach` as the single
 public entry.
+
+This install is for Codex skill behavior. It is separate from the terminal
+`ach` CLI command.
 
 ## 4. Start With ACH
 

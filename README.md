@@ -52,9 +52,24 @@ Use ACH when you are thinking:
 Do not use ACH for one-shot questions, simple edits, short lookups, or tasks
 where the next step is already obvious and low-risk.
 
+## How To Use It
+
+ACH is not CLI-only. It has two supported surfaces:
+
+| Surface | Use it when | What you install |
+| --- | --- | --- |
+| Codex skill | You want Codex to keep a long-running conversation stable | The repository folder as one skill named `ach` |
+| CLI | You want a workspace to have validateable recovery state | The Node CLI command `ach` |
+
+Other agent clients can still use ACH through the CLI and state contract, but
+they do not automatically get Codex skill behavior unless they support Codex
+skills.
+
+One-line installs are listed in [install](docs/install.md).
+
 ## Quick Start
 
-Use the CLI to try the formal state contract:
+Try the formal state contract from the repository root:
 
 ```bash
 npm test
@@ -71,8 +86,8 @@ node bin/ach.js validate --task my-long-task
 node bin/ach.js preflight my-long-task
 ```
 
-Install the repository as one Codex skill named `ach` when you want Codex to use
-the same continuity rules during conversation:
+Install the repository as one Codex skill named `ach` when you want Codex
+client conversations to use the same continuity rules:
 
 ```text
 Use ACH for this task.
@@ -81,6 +96,7 @@ Use ACH for this task.
 ACH starts in `guard-mode` by default. It enters `continuity-mode` only when the
 task needs recovery, handoff, a formal state root, or cross-window continuation.
 
+For exact install paths, see [install](docs/install.md).
 For a fuller setup path, see [quickstart](docs/quickstart.md).
 For the before/after recovery proof, see [demo](docs/demo.md).
 For command details, see [CLI docs](docs/cli.md) and

@@ -21,6 +21,7 @@ Added:
 - Local installed-skill sync helper.
 - Versioning policy and release artifact workflow.
 - Lightweight integration notes for Codex, Claude Code, Cursor, and LangGraph.
+- Install guide that separates Codex skill, CLI, and combined one-line installs.
 - Recovery failure and recovery-with-ACH examples.
 - Release check workflow and release checklist.
 - FAQ doc covering common comparisons.
