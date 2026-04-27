@@ -8,11 +8,13 @@
     "ach": "bin/ach.js"
   },
   "scripts": {
+    "demo": "node scripts/demo.js",
     "test": "node --test",
     "validate:fixtures": "node bin/ach.js validate examples/fixtures/valid-basic"
   },
   "files": [
     "bin/",
+    "scripts/",
     "schemas/",
     "assets/",
     "docs/",

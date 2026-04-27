@@ -104,6 +104,9 @@ or machine-readable:
 ach validate --json
 ```
 
+The CLI loads the public schemas in `schemas/` and then applies semantic checks
+for binding consistency, required files, and derived views inside state roots.
+
 Validation fails when:
 
 - `.cca-bindings.json` is missing or invalid

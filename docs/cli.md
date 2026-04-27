@@ -43,6 +43,8 @@ The state root must stay inside the workspace.
 ### `ach validate [workspace]`
 
 Validate the workspace binding index and bound state roots.
+Validation reads the public schemas under `schemas/` first, then checks the
+task-level recovery rules that schemas cannot express.
 
 ```bash
 node bin/ach.js validate
@@ -50,8 +52,8 @@ node bin/ach.js validate examples/fixtures/valid-basic --json
 node bin/ach.js validate --task demo-task
 ```
 
-Validation checks required files, manifest shape, task-key consistency, and
-binding consistency.
+Validation checks schema shape, required files, manifest task-key consistency,
+and binding consistency.
 
 ### `ach checkpoint <task-key>`
 

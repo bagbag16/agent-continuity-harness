@@ -28,6 +28,12 @@ The binding index does not contain a `bindings` object.
 
 Fix: use the structure documented in `docs/state-contract.md`.
 
+### `ACH_BINDINGS_SCHEMA`
+
+`.cca-bindings.json` does not match the public bindings schema.
+
+Fix: compare the file with `schemas/bindings.schema.json`.
+
 ### `ACH_TASK_NOT_BOUND`
 
 The requested task key does not exist in `.cca-bindings.json`.
@@ -71,6 +77,12 @@ Fix: fill the minimum recovery content.
 
 Fix: repair the manifest.
 
+### `ACH_MANIFEST_SCHEMA`
+
+`state-manifest.json` does not match the public state manifest schema.
+
+Fix: compare the file with `schemas/state-manifest.schema.json`.
+
 ### `ACH_MANIFEST_VERSION`
 
 The manifest version is not `1`.
@@ -106,6 +118,12 @@ Fix: use an array, even when empty.
 `superseded_roots` is not an array.
 
 Fix: use an array, even when empty.
+
+### `ACH_SCHEMA_UNAVAILABLE`
+
+The CLI could not load the public schema files shipped with ACH.
+
+Fix: reinstall ACH or run validation from a complete checkout/package.
 
 ## Warnings
 

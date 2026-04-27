@@ -58,6 +58,7 @@ Use the CLI to try the formal state contract:
 
 ```bash
 npm test
+npm run demo
 node bin/ach.js validate examples/fixtures/valid-basic
 node bin/ach.js handoff demo-task --root examples/fixtures/valid-basic
 ```
@@ -81,8 +82,10 @@ ACH starts in `guard-mode` by default. It enters `continuity-mode` only when the
 task needs recovery, handoff, a formal state root, or cross-window continuation.
 
 For a fuller setup path, see [quickstart](docs/quickstart.md).
+For the before/after recovery proof, see [demo](docs/demo.md).
 For command details, see [CLI docs](docs/cli.md) and
 [error codes](docs/error-codes.md).
+For host-tool notes, see [integrations](docs/integrations/README.md).
 
 ## What You Get
 
@@ -137,12 +140,14 @@ See [FAQ](docs/faq.md) for common comparison questions.
 ## Project
 
 This repository is preparing its first public ACH release. See
-[changelog](CHANGELOG.md) and [contributing](CONTRIBUTING.md).
+[changelog](CHANGELOG.md), [versioning](docs/releases/versioning.md), and
+[contributing](CONTRIBUTING.md).
 
 ## Repository Layout
 
 - `SKILL.md`: the public ACH entry.
 - `docs/`: quickstart, FAQ, distribution notes, and reusable project template.
+- `scripts/`: demo and local Codex skill sync helpers.
 - `examples/`: before/after examples and a transcript-style demo.
 - `schemas/`: public JSON schemas for the state manifest and binding index.
 - `bin/ach.js`: the portable CLI for validation, handoff, and recovery checks.
