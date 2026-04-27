@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/ach/state-manifest.schema.json",
+  "title": "ACH State Manifest",
+  "type": "object",
+  "required": [
+    "version",
+    "task_key",
+    "formal_state_root",
+    "active_mode",
+    "active_packs",
+    "last_handoff",
+    "superseded_roots",
+    "integrity_status"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "task_key": {
+      "type": "string",
+      "minLength": 1
+    },
+    "formal_state_root": {
+      "type": "string",
+      "pattern": "^\\.cca-state/"
+    },
+    "active_mode": {
+      "enum": ["guard-mode", "continuity-mode"]
+    },
+    "active_packs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "supplemental_documents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "role", "default_read", "read_when"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "default_read": {
+            "type": "boolean"
+          },
+          "read_when": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "default": []
+    },
+    "last_handoff": {
+      "type": ["object", "null"]
+    },
+    "superseded_roots": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "integrity_status": {
+      "enum": [
+        "ok",
+        "needs-normalization",
+        "incomplete",
+        "binding-conflict",
+        "shadow-copy-suspected"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

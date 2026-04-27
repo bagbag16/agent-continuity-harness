@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "task_key": "wrong-task",
+  "formal_state_root": ".cca-state/manifest-mismatch",
+  "active_mode": "continuity-mode",
+  "active_packs": [],
+  "last_handoff": null,
+  "superseded_roots": [],
+  "integrity_status": "ok"
+}

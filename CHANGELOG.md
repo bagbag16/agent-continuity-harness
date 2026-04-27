@@ -11,6 +11,14 @@ Added:
 - Single public positioning for Agent Continuity Harness.
 - README focused on understand, try, trust, and share.
 - Quickstart with install instructions.
+- CLI commands for init, bind, validate, checkpoint, handoff, preflight, and resume.
+- Public state contract documentation.
+- JSON schemas for state manifests and workspace bindings.
+- Valid and invalid state-root fixtures.
+- Node test coverage and GitHub Actions CI.
+- CLI command and error-code docs.
+- Recovery failure and recovery-with-ACH examples.
+- Release check workflow and release checklist.
 - FAQ doc covering common comparisons.
 - Before/after examples and transcript-style demo.
 - High-star GitHub project template.

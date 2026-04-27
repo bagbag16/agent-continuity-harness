@@ -1,0 +1,29 @@
+{
+  "name": "agent-continuity-harness",
+  "version": "0.1.0",
+  "description": "Continuity harness for long-running AI agent work.",
+  "license": "MIT",
+  "type": "commonjs",
+  "bin": {
+    "ach": "bin/ach.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "validate:fixtures": "node bin/ach.js validate examples/fixtures/valid-basic"
+  },
+  "files": [
+    "bin/",
+    "schemas/",
+    "assets/",
+    "docs/",
+    "examples/",
+    "references/",
+    "SKILL.md",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

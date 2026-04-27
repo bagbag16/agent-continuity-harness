@@ -14,6 +14,10 @@ Use ACH for this task. Keep the current goal, confirmed constraints,
 pending items, and handoff state stable across future rounds.
 ```
 
+ACH also protects state quality: it separates user goals from proposed paths,
+flags weak assumptions before they become inherited facts, and points out
+low-cost better routes when the current path has clear flaws.
+
 The formal project name is Agent Continuity Harness, with
 `agent-continuity-harness` as the repository slug. `ach` is the short skill name
 used to invoke it.
@@ -50,18 +54,24 @@ where the next step is already obvious and low-risk.
 
 ## Quick Start
 
-Install the repository as one Codex skill named `ach`.
+Use the CLI to try the formal state contract:
 
-```text
-skills/
-  ach/
-    SKILL.md
-    agents/
-    references/
-    assets/
+```bash
+npm test
+node bin/ach.js validate examples/fixtures/valid-basic
+node bin/ach.js handoff demo-task --root examples/fixtures/valid-basic
 ```
 
-Then ask Codex to use it:
+Create a new state root in your own workspace:
+
+```bash
+node bin/ach.js init my-long-task
+node bin/ach.js validate --task my-long-task
+node bin/ach.js preflight my-long-task
+```
+
+Install the repository as one Codex skill named `ach` when you want Codex to use
+the same continuity rules during conversation:
 
 ```text
 Use ACH for this task.
@@ -71,12 +81,23 @@ ACH starts in `guard-mode` by default. It enters `continuity-mode` only when the
 task needs recovery, handoff, a formal state root, or cross-window continuation.
 
 For a fuller setup path, see [quickstart](docs/quickstart.md).
+For command details, see [CLI docs](docs/cli.md) and
+[error codes](docs/error-codes.md).
 
 ## What You Get
 
 ACH has one public entry:
 
 - `ach`: the user-facing Agent Continuity Harness
+
+ACH now also includes a small CLI:
+
+- `ach init`: create the minimum formal state root
+- `ach bind`: bind a task key to an existing state root
+- `ach validate`: check binding and state-root integrity
+- `ach checkpoint`: append controlled updates to a state file
+- `ach handoff`: derive handoff text from formal state
+- `ach preflight` / `ach resume`: check recovery readiness
 
 Internally, ACH has two modes:
 
@@ -94,6 +115,8 @@ formal continuity.
 - [Long-task checkpoint](examples/03-long-task-checkpoint.md)
 - [When not to use ACH](examples/04-when-not-to-use.md)
 - [Transcript-style demo](examples/06-transcript-style-demo.md)
+- [Recovery failure without ACH](examples/07-recovery-failure.md)
+- [Recovery with ACH](examples/08-recovery-with-ach.md)
 
 Each example shows the failure pattern first, then the ACH behavior that keeps
 the task coherent.
@@ -121,6 +144,9 @@ This repository is preparing its first public ACH release. See
 - `SKILL.md`: the public ACH entry.
 - `docs/`: quickstart, FAQ, distribution notes, and reusable project template.
 - `examples/`: before/after examples and a transcript-style demo.
+- `schemas/`: public JSON schemas for the state manifest and binding index.
+- `bin/ach.js`: the portable CLI for validation, handoff, and recovery checks.
+- `test/`: CLI tests and fixture checks.
 - `assets/state-templates/`: templates for formal continuity state.
 - `references/`: internal guard and continuity rules used by ACH.
 

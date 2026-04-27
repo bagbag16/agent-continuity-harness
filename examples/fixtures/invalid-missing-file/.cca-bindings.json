@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "bindings": {
+    "missing-file": {
+      "formal_state_root": ".cca-state/missing-file"
+    }
+  }
+}

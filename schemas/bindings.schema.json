@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/ach/bindings.schema.json",
+  "title": "ACH Workspace Bindings",
+  "type": "object",
+  "required": ["version", "bindings"],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "bindings": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["formal_state_root"],
+        "properties": {
+          "formal_state_root": {
+            "type": "string",
+            "pattern": "^\\.cca-state/"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
