@@ -26,9 +26,12 @@ ACH
 ├─ state governance
 │  ├─ active: current-goal / confirmed-constraints / pending-items / decisions 四件套
 │  ├─ active: 新旧状态必须区分 active / pending / superseded / rejected
-│  └─ active: 外化以必要性为门槛，不以完整感为目标
+│  ├─ active: 外化以必要性为门槛，不以完整感为目标
+│  └─ active: 外化完成以正式状态可回读为准，不以对话总结或交接摘要为准
 ├─ cca system loading
 │  └─ active: system.md 只作为轻量索引；细则拆入 references/cca/system/ 并按触发读取
+├─ operating cost
+│  └─ active: token、读取量、启动延迟和用户手工交接都视为设计成本
 ├─ same-window continuation
 │  └─ pending: 先解决窗口内对话反复全盘阅读与必要内容外化，再扩展到 handoff
 ├─ handoff continuation
