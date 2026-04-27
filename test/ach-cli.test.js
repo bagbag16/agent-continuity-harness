@@ -16,6 +16,12 @@ function run(args, options = {}) {
   });
 }
 
+function copyFixture(name) {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), "ach-test-"));
+  fs.cpSync(path.join(repoRoot, "examples", "fixtures", name), temp, { recursive: true });
+  return temp;
+}
+
 test("valid fixture passes validation", () => {
   const result = run(["validate", "examples/fixtures/valid-basic", "--json"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
@@ -39,6 +45,32 @@ test("manifest mismatch fixture fails validation", () => {
   assert.ok(parsed.errors.some((error) => error.code === "ACH_MANIFEST_TASK_MISMATCH"));
 });
 
+test("bindings schema errors are reported", () => {
+  const temp = copyFixture("valid-basic");
+  const bindingsPath = path.join(temp, ".cca-bindings.json");
+  const bindings = JSON.parse(fs.readFileSync(bindingsPath, "utf8"));
+  bindings.bindings["demo-task"].formal_state_root = "state/demo-task";
+  fs.writeFileSync(bindingsPath, `${JSON.stringify(bindings, null, 2)}\n`);
+
+  const result = run(["validate", temp, "--json"]);
+  assert.equal(result.status, 1);
+  const parsed = JSON.parse(result.stdout);
+  assert.ok(parsed.errors.some((error) => error.code === "ACH_BINDINGS_SCHEMA"));
+});
+
+test("manifest schema errors are reported", () => {
+  const temp = copyFixture("valid-basic");
+  const manifestPath = path.join(temp, ".cca-state", "demo-task", "state-manifest.json");
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  delete manifest.integrity_status;
+  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+  const result = run(["validate", temp, "--json"]);
+  assert.equal(result.status, 1);
+  const parsed = JSON.parse(result.stdout);
+  assert.ok(parsed.errors.some((error) => error.code === "ACH_MANIFEST_SCHEMA"));
+});
+
 test("init creates a bound valid state root", () => {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), "ach-test-"));
   const init = run(["init", "new-task", "--root", temp]);
@@ -55,4 +87,14 @@ test("handoff is derived from formal state", () => {
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /This handoff is derived from the ACH formal state root/);
   assert.match(result.stdout, /Prepare a small ACH recovery demo/);
+});
+
+test("documented error codes cover CLI emitted codes", () => {
+  const cliText = fs.readFileSync(cli, "utf8");
+  const docsText = fs.readFileSync(path.join(repoRoot, "docs", "error-codes.md"), "utf8");
+  const codes = [...new Set(cliText.match(/ACH_[A-Z_]+/g) || [])];
+
+  for (const code of codes) {
+    assert.match(docsText, new RegExp(`### \`${code}\``), `${code} is missing from docs/error-codes.md`);
+  }
 });

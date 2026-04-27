@@ -17,6 +17,10 @@ Added:
 - Valid and invalid state-root fixtures.
 - Node test coverage and GitHub Actions CI.
 - CLI command and error-code docs.
+- Reproducible recovery demo script and demo guide.
+- Local installed-skill sync helper.
+- Versioning policy and release artifact workflow.
+- Lightweight integration notes for Codex, Claude Code, Cursor, and LangGraph.
 - Recovery failure and recovery-with-ACH examples.
 - Release check workflow and release checklist.
 - FAQ doc covering common comparisons.

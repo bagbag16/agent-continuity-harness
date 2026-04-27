@@ -13,6 +13,7 @@ From the repository root:
 
 ```bash
 npm test
+npm run demo
 node bin/ach.js validate examples/fixtures/valid-basic
 node bin/ach.js handoff demo-task --root examples/fixtures/valid-basic
 ```
@@ -20,6 +21,7 @@ node bin/ach.js handoff demo-task --root examples/fixtures/valid-basic
 Expected behavior:
 
 - tests pass
+- the demo shows a rejected broken state and an accepted recovery state
 - the valid fixture validates successfully
 - handoff output says it is derived from the ACH formal state root
 
@@ -54,12 +56,25 @@ skills/
   ach/
     SKILL.md
     agents/
-    references/
     assets/
+    references/
+    examples/
+    docs/
+    schemas/
+    bin/
+    scripts/
 ```
 
 The repository root is the skill root. Do not install files inside
-`references/` as separate skills; they are internal ACH rules.
+`references/` as separate skills; they are internal ACH rules. Keep the docs,
+examples, schemas, and CLI with the skill so installed ACH matches the public
+repository behavior.
+
+Local sync helper:
+
+```powershell
+.\scripts\sync-installed-skill.ps1
+```
 
 Manual install:
 

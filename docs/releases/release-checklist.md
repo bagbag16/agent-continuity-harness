@@ -6,6 +6,7 @@ Use this checklist before tagging an ACH release.
 
 ```bash
 npm test
+npm run demo
 node bin/ach.js validate examples/fixtures/valid-basic
 node bin/ach.js validate examples/fixtures/invalid-missing-file --json
 node bin/ach.js validate examples/fixtures/invalid-manifest-mismatch --json
@@ -20,6 +21,8 @@ npm pack --dry-run
 - The four-file state core remains unchanged.
 - No new state protocol is introduced.
 - `CHANGELOG.md` includes the release notes.
+- Versioning impact is checked against `docs/releases/versioning.md`.
+- The package artifact is inspected before any manual publish.
 
 ## Scope Checks
 

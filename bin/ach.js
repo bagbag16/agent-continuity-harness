@@ -297,6 +297,8 @@ function validateWorkspace(root, taskFilter) {
     return result;
   }
 
+  validateSchemaFile("bindings.schema.json", bindings, result, "ACH_BINDINGS_SCHEMA", ".cca-bindings.json");
+
   if (bindings.version !== 1) {
     addError(result, "ACH_BINDINGS_VERSION", "bindings version must be 1.", ".cca-bindings.json");
   }
@@ -354,23 +356,26 @@ function validateBinding(root, taskKey, binding, result) {
   const manifest = readJsonFile(manifestPath, result, "ACH_MANIFEST_INVALID");
   if (!manifest) return;
 
+  const manifestRelPath = toPosix(path.join(binding.formal_state_root, "state-manifest.json"));
+  validateSchemaFile("state-manifest.schema.json", manifest, result, "ACH_MANIFEST_SCHEMA", manifestRelPath);
+
   if (manifest.version !== 1) {
-    addError(result, "ACH_MANIFEST_VERSION", "state-manifest version must be 1.", toPosix(path.join(binding.formal_state_root, "state-manifest.json")));
+    addError(result, "ACH_MANIFEST_VERSION", "state-manifest version must be 1.", manifestRelPath);
   }
   if (manifest.task_key !== taskKey) {
-    addError(result, "ACH_MANIFEST_TASK_MISMATCH", `manifest task_key must be ${taskKey}.`, toPosix(path.join(binding.formal_state_root, "state-manifest.json")));
+    addError(result, "ACH_MANIFEST_TASK_MISMATCH", `manifest task_key must be ${taskKey}.`, manifestRelPath);
   }
   if (normalizeRel(manifest.formal_state_root) !== normalizeRel(binding.formal_state_root)) {
-    addError(result, "ACH_MANIFEST_ROOT_MISMATCH", "manifest formal_state_root must match binding.", toPosix(path.join(binding.formal_state_root, "state-manifest.json")));
+    addError(result, "ACH_MANIFEST_ROOT_MISMATCH", "manifest formal_state_root must match binding.", manifestRelPath);
   }
   if (!["guard-mode", "continuity-mode"].includes(manifest.active_mode)) {
-    addError(result, "ACH_MANIFEST_MODE", "active_mode must be guard-mode or continuity-mode.", toPosix(path.join(binding.formal_state_root, "state-manifest.json")));
+    addError(result, "ACH_MANIFEST_MODE", "active_mode must be guard-mode or continuity-mode.", manifestRelPath);
   }
   if (!Array.isArray(manifest.active_packs)) {
-    addError(result, "ACH_MANIFEST_PACKS", "active_packs must be an array.", toPosix(path.join(binding.formal_state_root, "state-manifest.json")));
+    addError(result, "ACH_MANIFEST_PACKS", "active_packs must be an array.", manifestRelPath);
   }
   if (!Array.isArray(manifest.superseded_roots)) {
-    addError(result, "ACH_MANIFEST_SUPERSEDED_ROOTS", "superseded_roots must be an array.", toPosix(path.join(binding.formal_state_root, "state-manifest.json")));
+    addError(result, "ACH_MANIFEST_SUPERSEDED_ROOTS", "superseded_roots must be an array.", manifestRelPath);
   }
 
   const extraFiles = fs.readdirSync(stateRoot).filter((name) => /handoff|summary|resume/i.test(name));
@@ -450,6 +455,111 @@ function readJsonFile(filePath, result, code) {
     addError(result, code, error.message, filePath);
     return null;
   }
+}
+
+function validateSchemaFile(schemaName, value, result, code, filePath) {
+  const schemaPath = path.resolve(__dirname, "..", "schemas", schemaName);
+  if (!fs.existsSync(schemaPath)) {
+    addError(result, "ACH_SCHEMA_UNAVAILABLE", `Schema file is missing: ${schemaName}`, schemaPath);
+    return;
+  }
+
+  let schema;
+  try {
+    schema = JSON.parse(fs.readFileSync(schemaPath, "utf8"));
+  } catch (error) {
+    addError(result, "ACH_SCHEMA_UNAVAILABLE", `Schema file is invalid: ${error.message}`, schemaPath);
+    return;
+  }
+
+  const issues = [];
+  validateSchemaNode(schema, value, "$", issues);
+  for (const issue of issues) {
+    addError(result, code, `${issue.path}: ${issue.message}`, filePath);
+  }
+}
+
+function validateSchemaNode(schema, value, jsonPath, issues) {
+  if (!schema || typeof schema !== "object") return;
+
+  if (Object.prototype.hasOwnProperty.call(schema, "const") && value !== schema.const) {
+    issues.push({ path: jsonPath, message: `expected ${JSON.stringify(schema.const)}` });
+  }
+
+  if (schema.enum && !schema.enum.includes(value)) {
+    issues.push({ path: jsonPath, message: `expected one of ${schema.enum.map((item) => JSON.stringify(item)).join(", ")}` });
+  }
+
+  if (schema.type && !matchesSchemaType(value, schema.type)) {
+    issues.push({ path: jsonPath, message: `expected type ${Array.isArray(schema.type) ? schema.type.join(" or ") : schema.type}` });
+    return;
+  }
+
+  if (typeof value === "string") {
+    if (schema.minLength !== undefined && value.length < schema.minLength) {
+      issues.push({ path: jsonPath, message: `expected minLength ${schema.minLength}` });
+    }
+    if (schema.pattern && !(new RegExp(schema.pattern).test(value))) {
+      issues.push({ path: jsonPath, message: `expected pattern ${schema.pattern}` });
+    }
+  }
+
+  if (Array.isArray(value)) {
+    if (schema.items) {
+      value.forEach((item, index) => validateSchemaNode(schema.items, item, `${jsonPath}[${index}]`, issues));
+    }
+    return;
+  }
+
+  if (!value || typeof value !== "object") return;
+
+  const properties = schema.properties || {};
+  if (schema.required) {
+    for (const key of schema.required) {
+      if (!Object.prototype.hasOwnProperty.call(value, key)) {
+        issues.push({ path: `${jsonPath}.${key}`, message: "is required" });
+      }
+    }
+  }
+
+  for (const [key, childSchema] of Object.entries(properties)) {
+    if (Object.prototype.hasOwnProperty.call(value, key)) {
+      validateSchemaNode(childSchema, value[key], `${jsonPath}.${key}`, issues);
+    }
+  }
+
+  for (const key of Object.keys(value)) {
+    if (Object.prototype.hasOwnProperty.call(properties, key)) continue;
+    if (schema.additionalProperties === false) {
+      issues.push({ path: `${jsonPath}.${key}`, message: "is not allowed" });
+    } else if (schema.additionalProperties && typeof schema.additionalProperties === "object") {
+      validateSchemaNode(schema.additionalProperties, value[key], `${jsonPath}.${key}`, issues);
+    }
+  }
+}
+
+function matchesSchemaType(value, expected) {
+  const types = Array.isArray(expected) ? expected : [expected];
+  return types.some((type) => {
+    switch (type) {
+      case "array":
+        return Array.isArray(value);
+      case "boolean":
+        return typeof value === "boolean";
+      case "integer":
+        return Number.isInteger(value);
+      case "null":
+        return value === null;
+      case "number":
+        return typeof value === "number" && Number.isFinite(value);
+      case "object":
+        return value !== null && typeof value === "object" && !Array.isArray(value);
+      case "string":
+        return typeof value === "string";
+      default:
+        return true;
+    }
+  });
 }
 
 function readFile(filePath) {
