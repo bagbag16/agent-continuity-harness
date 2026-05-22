@@ -40,6 +40,10 @@
         "type": "object",
         "required": ["path", "role", "default_read", "read_when"],
         "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
           "path": {
             "type": "string",
             "minLength": 1
@@ -48,12 +52,50 @@
             "type": "string",
             "minLength": 1
           },
+          "status": {
+            "enum": ["active", "pending", "superseded", "rejected", "diagnostic", "custom"]
+          },
           "default_read": {
             "type": "boolean"
           },
           "read_when": {
             "type": "string",
             "minLength": 1
+          },
+          "blocks_recovery_if_missing": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "default": []
+    },
+    "validators": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "target"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "enum": ["artifact-index"]
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "active_context": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": ["active", "pending", "disabled"]
+          },
+          "blocks_recovery_if_failed": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false

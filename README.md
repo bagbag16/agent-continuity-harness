@@ -113,10 +113,19 @@ ACH now also includes a small CLI:
 
 - `ach init`: create the minimum formal state root
 - `ach bind`: bind a task key to an existing state root
+- `ach list` / `ach tasks`: list bound tasks and their validation state
+- `ach health`: fail when any bound task is invalid
 - `ach validate`: check binding and state-root integrity
 - `ach checkpoint`: append controlled updates to a state file
+- `ach record`: append structured decisions, constraints, pending items, or goal notes
+- `ach status`: extract the compact machine-readable current task view
+- `ach check-write`: check whether durable writes are visible to future recovery
 - `ach handoff`: derive handoff text from formal state
+- `ach pause`: combine status, write-closure check, and compact handoff
 - `ach preflight` / `ach resume`: check recovery readiness
+- `ach add-supplemental`: create and register standard supplemental state docs
+- `ach artifact check/add`: validate and append artifact provenance entries
+- `ach repair --safe`: apply only safe mechanical state-root repairs
 
 Internally, ACH has two modes:
 

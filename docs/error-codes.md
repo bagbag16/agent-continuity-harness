@@ -125,6 +125,66 @@ The CLI could not load the public schema files shipped with ACH.
 
 Fix: reinstall ACH or run validation from a complete checkout/package.
 
+### `ACH_SUPPLEMENTAL_DOCUMENT_MISSING`
+
+A manifest-listed supplemental document is missing.
+
+Fix: restore the document, remove the manifest entry, or set
+`blocks_recovery_if_missing` to `false` when the document is useful but not
+required for recovery. Missing documents fail validation only when they block
+recovery; otherwise they warn.
+
+### `ACH_SUPPLEMENTAL_DOCUMENT_OUTSIDE_STATE_ROOT`
+
+A manifest-listed supplemental document points outside the formal state root.
+
+Fix: move the document into the formal state root or correct the manifest path.
+
+### `ACH_ACTIVE_CONTEXT_MISSING_SECTION`
+
+A manifest-listed `active-context` document is missing a required recovery
+section such as current route, active rules, active artifacts, current blockers,
+or read order.
+
+Fix: restore the missing section or mark the supplemental document as
+non-blocking if it is not required for recovery. Missing sections fail
+validation when the active-context entry blocks recovery; otherwise they warn.
+
+### `ACH_VALIDATOR_TARGET_OUTSIDE_STATE_ROOT`
+
+A manifest-listed validator target points outside the formal state root.
+
+Fix: move the validator target into the state root or correct the manifest
+entry.
+
+### `ACH_VALIDATOR_TARGET_MISSING`
+
+A manifest-listed validator target is missing.
+
+Fix: restore the target document or disable/remove the validator entry.
+
+### `ACH_ARTIFACT_INDEX_INVALID`
+
+An `artifact-index` validator found an invalid artifact index. Common causes
+include duplicate artifact ids, missing artifact files, active-context artifacts
+that are not indexed, unresolved same-index `depends_on` artifact ids,
+non-active artifacts referenced by active-context, route or mouth mismatches, or
+stale `source_paths`.
+
+Fix: update `artifact-provenance-index.md`, `active-context.md`, or the
+generated artifact so the active route and artifact evidence agree.
+
+### `ACH_WRITE_CLOSURE`
+
+`ach check-write` found a write-to-use closure issue. Common causes include an
+active `active-context` that is not in the default read path, active artifacts
+that are not indexed, artifact entries that are not active, or route/mouth
+mismatches between the current route and active artifacts.
+
+Fix: update `active-context.md`, `state-manifest.json`, or
+`artifact-provenance-index.md` so future recovery can read and use the intended
+state effect.
+
 ## Warnings
 
 ### `ACH_DERIVED_VIEW_IN_STATE_ROOT`
@@ -134,3 +194,24 @@ state root.
 
 Fix: keep handoff output outside the formal state root unless it is explicitly
 externalized into one of the core state files.
+
+### `ACH_SUPPLEMENTAL_ROLE_UNKNOWN`
+
+A supplemental document role is not one of ACH's known roles and the entry is
+not marked with `status: "custom"`.
+
+Fix: use a standard role, or mark the entry as custom when it is intentionally
+outside ACH's known supplemental layer set.
+
+### `ACH_SUPPLEMENTAL_DOCUMENT_NOT_FILE`
+
+A manifest-listed supplemental document exists but is not a regular file.
+
+Fix: point the manifest entry to a markdown file inside the formal state root.
+
+### `ACH_SUPPLEMENTAL_DOCUMENT_EMPTY`
+
+A manifest-listed supplemental document exists but has no content.
+
+Fix: add enough content for recovery, or remove the manifest entry until the
+document is useful.

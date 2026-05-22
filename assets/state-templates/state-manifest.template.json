@@ -4,6 +4,8 @@
   "formal_state_root": ".cca-state/<task-key>",
   "active_mode": "guard-mode",
   "active_packs": [],
+  "supplemental_documents": [],
+  "validators": [],
   "last_handoff": null,
   "superseded_roots": [],
   "integrity_status": "ok"
