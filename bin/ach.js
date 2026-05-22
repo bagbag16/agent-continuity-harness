@@ -28,6 +28,12 @@ const KNOWN_SUPPLEMENTAL_ROLES = new Set([
 
 function main() {
   const [command, ...rest] = process.argv.slice(2);
+
+  if (rest.includes("--help") || rest.includes("-h")) {
+    printCommandHelp(command);
+    return 0;
+  }
+
   const args = parseArgs(rest);
 
   try {
@@ -2091,31 +2097,57 @@ function printJsonOrText(args, json, text) {
   else console.log(text);
 }
 
+const CLI_USAGE_LINES = [
+  "ach init <task-key> [--root <workspace>] [--dry-run] [--no-bind]",
+  "ach bind <task-key> <state-root> [--root <workspace>] [--dry-run]",
+  "ach list [workspace] [--json]",
+  "ach tasks [workspace] [--json]",
+  "ach health [workspace] [--json]",
+  "ach validate [workspace] [--task <task-key>] [--json]",
+  "ach checkpoint <task-key> --file <state-file> --append <text>",
+  "ach record <task-key> --type <type> --text <text> [--json]",
+  "ach handoff <task-key> [--compact] [--full] [--json]",
+  "ach pause <task-key> [--json]",
+  "ach preflight <task-key> [--json]",
+  "ach resume <task-key> [--json]",
+  "ach status <task-key> [--brief] [--json]",
+  "ach check-write <task-key> [--json]",
+  "ach add-supplemental <task-key> --role <role> [--json]",
+  "ach artifact check <task-key> [--json]",
+  "ach artifact add <task-key> --path <path> [--id <id>] [--json]",
+  "ach repair <task-key> --safe [--dry-run] [--json]",
+];
+
 function printHelp() {
+  const usage = CLI_USAGE_LINES.map((line) => "  " + line).join("\n");
   console.log(`ACH CLI
 
 Usage:
-  ach init <task-key> [--root <workspace>] [--dry-run] [--no-bind]
-  ach bind <task-key> <state-root> [--root <workspace>] [--dry-run]
-  ach list [workspace] [--json]
-  ach tasks [workspace] [--json]
-  ach health [workspace] [--json]
-  ach validate [workspace] [--task <task-key>] [--json]
-  ach checkpoint <task-key> --file <state-file> --append <text>
-  ach record <task-key> --type <type> --text <text> [--json]
-  ach handoff <task-key> [--compact] [--full] [--json]
-  ach pause <task-key> [--json]
-  ach preflight <task-key> [--json]
-  ach resume <task-key> [--json]
-  ach status <task-key> [--brief] [--json]
-  ach check-write <task-key> [--json]
-  ach add-supplemental <task-key> --role <role> [--json]
-  ach artifact check <task-key> [--json]
-  ach artifact add <task-key> --path <path> [--id <id>] [--json]
-  ach repair <task-key> --safe [--dry-run] [--json]
+${usage}
 
 State files:
   current-goal, confirmed-constraints, pending-items, decisions
+`);
+}
+
+function printCommandHelp(command) {
+  if (!command || command === "--help" || command === "-h" || command === "help") {
+    printHelp();
+    return;
+  }
+  const matches = CLI_USAGE_LINES.filter((line) => {
+    const tokens = line.split(/\s+/);
+    return tokens[1] === command;
+  });
+  if (matches.length === 0) {
+    printHelp();
+    return;
+  }
+  const usage = matches.map((line) => "  " + line).join("\n");
+  console.log(`Usage:
+${usage}
+
+See \`ach --help\` for the full command list, or docs/cli.md for full details.
 `);
 }
 

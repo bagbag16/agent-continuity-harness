@@ -590,6 +590,26 @@ test("compact handoff prioritizes active-context semantic sections", () => {
   assert.doesNotMatch(result.stdout, /SHOULD_NOT_APPEAR_IN_COMPACT/);
 });
 
+test("per-command --help prints usage for known command and exits 0", () => {
+  const result = run(["init", "--help"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /ach init <task-key>/);
+  assert.doesNotMatch(result.stdout, /Missing value for --help/);
+});
+
+test("per-command --help on unknown command falls back to full help", () => {
+  const result = run(["bogus-command", "--help"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /ACH CLI/);
+  assert.match(result.stdout, /ach init <task-key>/);
+});
+
+test("per-command -h short flag works the same as --help", () => {
+  const result = run(["status", "-h"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /ach status <task-key>/);
+});
+
 test("documented error codes cover CLI emitted codes", () => {
   const cliText = fs.readFileSync(cli, "utf8");
   const docsText = fs.readFileSync(path.join(repoRoot, "docs", "error-codes.md"), "utf8");
