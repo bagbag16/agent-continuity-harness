@@ -43,6 +43,29 @@ ach --help
 
 To run the demo fixtures, use a repository checkout.
 
+### Windows PowerShell Note
+
+If you run `ach` directly in native PowerShell and hit an execution policy
+error such as `cannot be loaded because running scripts is disabled on this
+system`, you have two options:
+
+- Use the `.cmd` form (works under PowerShell, cmd, and Git Bash):
+
+  ```powershell
+  ach.cmd --help
+  ```
+
+- Or enable PowerShell scripts once for the current user (also fixes every
+  other npm global CLI on the same machine):
+
+  ```powershell
+  Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+  ```
+
+This is a general npm-on-Windows behavior: npm generates an unsigned
+`<bin>.ps1` wrapper that the default Restricted policy blocks. It is not
+specific to ACH.
+
 ### Both Codex Skill And CLI
 
 Windows PowerShell:
