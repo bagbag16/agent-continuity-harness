@@ -11,7 +11,9 @@ Added:
 - Single public positioning for Agent Continuity Harness.
 - README focused on understand, try, trust, and share.
 - Quickstart with install instructions.
-- CLI commands for init, bind, validate, checkpoint, handoff, preflight, and resume.
+- CLI commands for init, bind, list/tasks, health, validate, checkpoint,
+  record, status, check-write, handoff, pause, preflight/resume,
+  add-supplemental, artifact check/add, and safe repair.
 - Public state contract documentation.
 - JSON schemas for state manifests and workspace bindings.
 - Valid and invalid state-root fixtures.
@@ -29,6 +31,9 @@ Added:
 - High-star GitHub project template.
 - ACH GitHub productization plan example.
 - Contribution and issue templates.
+- README coverage for intent workflow presets, user-facing status rendering,
+  state-effect routing, complex state externalization, supplemental state
+  layers, artifact provenance, and write-to-use closure.
 
 Clarified:
 

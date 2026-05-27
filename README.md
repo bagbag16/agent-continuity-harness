@@ -59,7 +59,7 @@ ACH is not CLI-only. It has two supported surfaces:
 | Surface | Use it when | What you install |
 | --- | --- | --- |
 | Codex skill | You want Codex to keep a long-running conversation stable | The repository folder as one skill named `ach` |
-| CLI | You want a workspace to have validateable recovery state | The Node CLI command `ach` |
+| CLI | You want a workspace to have validatable recovery state | The Node CLI command `ach` |
 
 Other agent clients can still use ACH through the CLI and state contract, but
 they do not automatically get Codex skill behavior unless they support Codex
@@ -109,7 +109,54 @@ ACH has one public entry:
 
 - `ach`: the user-facing Agent Continuity Harness
 
-ACH now also includes a small CLI:
+In Codex, ACH also translates common task-control language into stable
+workflows:
+
+- **status / progress / what next**: recover from formal state internally and
+  render only the current route, usable state, blockers, active constraints, and
+  next action.
+- **continue / resume / keep going**: resolve the bound task, preflight the
+  state root, read only the additionally needed state, and continue from the
+  recovered point.
+- **record / checkpoint / remember this**: route the durable state effect to the
+  smallest appropriate target, then validate or check write closure when
+  practical.
+- **correct / revise / self-check drift**: identify the changed assumption,
+  downgrade or supersede stale state, and continue from the corrected recovery
+  path.
+- **pause / hand off / next window**: update current recovery state, check that
+  durable writes are usable, and provide a compact resume package rather than a
+  raw state dump.
+
+The formal state root starts with four recovery-core files plus
+`state-manifest.json`, and can grow only when the task complexity justifies it:
+
+- Complex state externalization is for tasks with competing hypotheses,
+  multiple route attempts, reusable artifacts, or correction impact that would
+  make the core files noisy. The core files stay concise and current; complex
+  history moves into indexed supplemental documents so old branches do not gain
+  false authority during recovery.
+- `active-context`: current route, active constraints, artifacts, blockers, and
+  read order for complex tasks.
+- `branch-attempt-ledger`: tried routes, competing assumptions, rejected or
+  downgraded branches, and diagnostic history.
+- `artifact-provenance-index`: reusable outputs, source paths, dependencies,
+  status, and replacement links.
+- `state-relation-index`: typed dependencies, conflicts, supersessions,
+  invalidations, and correction impact.
+- `compiled-lineage`: durable reasoning for why the current route exists.
+
+The intended recovery rule is simple: read `active-context` for what is current,
+read `branch-attempt-ledger` only when tracing old hypotheses or route attempts,
+read `artifact-provenance-index` when deciding whether an output is still valid,
+and read `state-relation-index` when a correction may affect related state.
+
+ACH includes a write-to-use closure rule: a state write is not considered done
+just because a file changed. Future recovery must be able to find and use the
+effect through the default read path, active-context, manifest metadata, or the
+appropriate supplemental index.
+
+ACH now also includes a CLI:
 
 - `ach init`: create the minimum formal state root
 - `ach bind`: bind a task key to an existing state root
@@ -118,7 +165,7 @@ ACH now also includes a small CLI:
 - `ach validate`: check binding and state-root integrity
 - `ach checkpoint`: append controlled updates to a state file
 - `ach record`: append structured decisions, constraints, pending items, or goal notes
-- `ach status`: extract the compact machine-readable current task view
+- `ach status`: extract the compact current task view for agent rendering
 - `ach check-write`: check whether durable writes are visible to future recovery
 - `ach handoff`: derive handoff text from formal state
 - `ach pause`: combine status, write-closure check, and compact handoff

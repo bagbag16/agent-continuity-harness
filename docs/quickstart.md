@@ -4,7 +4,7 @@ This quickstart is the smallest useful ACH trial path. ACH has two supported
 surfaces:
 
 - Codex skill: conversation continuity inside Codex.
-- CLI: validateable recovery state in a workspace.
+- CLI: validatable recovery state in a workspace.
 
 Use either one, or both. For exact install paths, see [install](install.md).
 
