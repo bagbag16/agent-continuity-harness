@@ -142,7 +142,8 @@ contract even without skill support.
 
 ## Quick start
 
-**As an agent skill** — just ask for it in the conversation:
+**As an agent skill** — ACH is an installable skill, not a copy-paste prompt.
+Install it once ([install](docs/install.md)), then in any conversation just ask:
 
 ```text
 Use ACH for this task. Keep the current goal, confirmed constraints,
@@ -162,8 +163,10 @@ ach resume my-long-task        # check recovery readiness
 ACH starts in `guard-mode`. It enters `continuity-mode` only when the task needs
 recovery, handoff, a formal state root, or cross-window continuation.
 
+> The CLI installs from GitHub (`npm i -g github:bagbag16/agent-continuity-harness`)
+> until an npm release exists — see [install](docs/install.md).
+>
 > Full command reference: [`docs/cli.md`](docs/cli.md) ·
-> install paths: [`docs/install.md`](docs/install.md) ·
 > before/after proof: [`docs/demo.md`](docs/demo.md).
 
 ## Core concepts

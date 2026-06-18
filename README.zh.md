@@ -123,7 +123,8 @@ CLI 让契约**可运行**——它不跑 agent;它创建、校验、读取正�
 
 ## 快速开始
 
-**作为 agent skill** —— 在对话里直接要它:
+**作为 agent skill** —— ACH 是一个可安装的 skill,不是一段复制粘贴的 prompt。装一次
+([安装](docs/install.md)),之后在任何对话里直接说:
 
 ```text
 Use ACH for this task. Keep the current goal, confirmed constraints,
@@ -143,8 +144,10 @@ ach resume my-long-task        # 检查恢复就绪度
 ACH 从 `guard-mode` 起步。只有任务需要恢复、交接、正式状态根或跨窗口延续时,才进入
 `continuity-mode`。
 
+> CLI 暂无 npm 发布,从 GitHub 安装(`npm i -g github:bagbag16/agent-continuity-harness`)
+> —— 见[安装](docs/install.md)。
+>
 > 完整命令参考:[`docs/cli.md`](docs/cli.md) ·
-> 安装路径:[`docs/install.md`](docs/install.md) ·
 > before/after 实证:[`docs/demo.md`](docs/demo.md)。
 
 ## 核心概念
