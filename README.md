@@ -1,241 +1,242 @@
+<!-- Language switch -->
+**English** | [中文](./README.zh.md)
+
 # Agent Continuity Harness (ACH)
 
 **Continuity for AI agent work that outgrows one chat.**
 
-Long-running agent work usually fails at the handoff point: goals drift,
-assumptions harden into facts, and the next chat cannot recover the real task
-state.
+Long-running agent work rarely fails on the *next step* — the model can still do
+that. It fails on **continuity**: after a few rounds the goal drifts, assumptions
+harden into facts, old constraints get overwritten by new information, and a
+fresh chat can no longer recover what the task actually was.
 
-ACH gives Codex one public skill entry, `ach`, that starts lightweight and
-escalates only when the task needs formal continuity state.
+ACH is the layer that decides *when* a conversation only needs a lightweight
+guard, and *when* it needs formal, recoverable state. It starts light and
+escalates only when the task earns it.
+
+```mermaid
+flowchart TD
+  T["Incoming task"] --> G["guard-mode (default, lightweight)"]
+  G -->|"anchor goal + constraints, flag weak assumptions"| W["Work continues"]
+  W -->|"task earns complexity:<br/>handoff / recovery / cross-window"| C["continuity-mode"]
+  C --> S["Formal state root"]
+  subgraph S2 ["What gets externalized"]
+    AC["active-context — current route + read order"]
+    BL["branch-attempt-ledger — tried routes, forks, why"]
+    AI["artifact-provenance-index — outputs + validity"]
+    RI["state-relation-index — deps, conflicts, supersessions"]
+  end
+  S --> S2
+  S2 --> H["handoff / resume — state, not chat memory"]
+```
+
+> **Design stance:** lightweight by default; formal state only when continuity
+> is actually at risk. Users never pick an internal module — ACH decides.
+
+<details>
+<summary>Table of contents</summary>
+
+- [The problem](#the-problem)
+- [Why this exists](#why-this-exists)
+- [How it works](#how-it-works)
+- [The version tree](#the-version-tree)
+- [Two surfaces](#two-surfaces)
+- [Quick start](#quick-start)
+- [Core concepts](#core-concepts)
+- [Examples](#examples)
+- [When to use it — and when not to](#when-to-use-it--and-when-not-to)
+- [How ACH differs](#how-ach-differs)
+- [Relationship to agent-drift-guard](#relationship-to-agent-drift-guard)
+- [Design & attribution](#design--attribution)
+- [License](#license)
+
+</details>
+
+---
+
+## The problem
+
+Long-running AI work tends to fail quietly:
+
+- the goal drifts after several rounds;
+- assumptions get treated as confirmed facts;
+- old constraints are forgotten once new information arrives;
+- a new chat cannot recover the real task state;
+- handoffs depend on whatever happened to survive in chat history.
+
+ACH targets exactly this narrow failure mode — the model can still produce the
+next step, but the **task line** is losing continuity.
+
+## Why this exists
+
+ACH is **not** another prompt template, agent framework, or memory database.
+Those answer "how do I phrase / build / store." ACH answers a different question:
+
+> *When does this conversation still just need a lightweight guard, and when does
+> it need formal, recoverable state?*
+
+That decision is the whole product. Everything below is in service of making it
+automatic and cheap.
+
+## How it works
+
+ACH runs in two internal modes and moves between them on its own.
+
+**`guard-mode` (default, lightweight).** For normal multi-turn work. It keeps the
+goal anchored, separates the user's goal from any *proposed* path, and flags weak
+assumptions before they get inherited as facts. No files, no ceremony.
+
+**`continuity-mode` (escalated).** Entered only when the task needs handoff,
+recovery, a formal state root, or cross-window continuation. State is
+**externalized** into a small state root so the next round — or the next person,
+or the next chat — recovers from *state*, not from chat memory.
+
+> **Observed problem → design judgment → trade-off**
+>
+> - **Goal drift** → externalize the *current route* into `active-context`
+>   instead of leaving it implicit in history. *Trade-off:* one more file to keep
+>   current, in exchange for a stable read order on recovery.
+> - **Smuggled assumptions** → in guard-mode, hold "goal" and "proposed path"
+>   apart and mark weak assumptions. *Trade-off:* slightly more friction now, far
+>   less rework later.
+> - **State loss** → a **write-to-use closure rule**: changing a file does *not*
+>   count as recorded. A write is done only when future recovery can *find and
+>   use* it through the default read path. *Trade-off:* writes are stricter, but
+>   "we wrote it down and still lost it" stops happening.
+
+The formal state root starts minimal — four recovery-core files plus
+`state-manifest.json` — and grows supplemental documents **only when the task's
+complexity justifies it**, so old branches never gain false authority during
+recovery.
+
+## The version tree
+
+This is what separates ACH from a simple drift guard. A long task is not a
+straight line; it evolves, forks, and sometimes backtracks. ACH tracks that shape
+explicitly:
+
+- **`branch-attempt-ledger`** — routes tried, competing assumptions, branches
+  that were rejected or downgraded, and the diagnostic history behind them.
+- **`state-relation-index`** — typed relationships: dependencies, conflicts,
+  supersessions, invalidations, and correction impact.
+- **`compiled-lineage`** — the durable reasoning for *why the current route
+  exists*.
+
+The point of recording **why a fork happened** is recovery integrity: without it,
+a correction made now can let a stale assumption quietly come back later. The
+version tree is what keeps superseded reasoning superseded.
+
+## Two surfaces
+
+ACH ships as two equal delivery surfaces over one continuity contract.
+
+| Surface | Use it when | What you install |
+| --- | --- | --- |
+| **Agent skill** (`ach`) | You want an agent (Codex / Claude Code) to keep a long conversation stable automatically | The repository folder as one skill named `ach` |
+| **Node CLI** (`ach`) | You want a workspace to hold validatable, recoverable state | The Node CLI (`node >= 20`) |
+
+The CLI makes the contract *runnable* — it does not run agents; it creates,
+validates, and reads formal state roots so handoff and resume can depend on state
+instead of memory. Other clients can use ACH through the CLI and the state
+contract even without skill support.
+
+## Quick start
+
+**As an agent skill** — just ask for it in the conversation:
 
 ```text
 Use ACH for this task. Keep the current goal, confirmed constraints,
 pending items, and handoff state stable across future rounds.
 ```
 
-ACH also protects state quality: it separates user goals from proposed paths,
-flags weak assumptions before they become inherited facts, and points out
-low-cost better routes when the current path has clear flaws.
-
-The formal project name is Agent Continuity Harness, with
-`agent-continuity-harness` as the repository slug. `ach` is the short skill name
-used to invoke it.
-
-It is not another prompt template, agent framework, or memory database. ACH is
-the layer that decides when a normal conversation needs a lightweight guard, and
-when it needs formal continuity state.
-
-## The Problem
-
-Long-running AI work often fails quietly:
-
-- the goal drifts after several rounds
-- assumptions become treated as confirmed facts
-- old constraints get forgotten after new information appears
-- a new chat cannot recover the real task state
-- handoffs depend on whatever happened to remain in chat history
-
-ACH exists for this narrow failure mode: the model can still do the next step,
-but the task line is starting to lose continuity.
-
-## When To Use ACH
-
-Use ACH when you are thinking:
-
-- "This task will continue later, and I do not want to re-explain it."
-- "The conversation is starting to drift; first stabilize the boundary."
-- "I need to move this work into a new chat without losing state."
-- "The current goal, constraints, and open questions must not stay only in chat."
-- "Someone else may need to take over this task from the current point."
-
-Do not use ACH for one-shot questions, simple edits, short lookups, or tasks
-where the next step is already obvious and low-risk.
-
-## How To Use It
-
-ACH is not CLI-only. It has two supported surfaces:
-
-| Surface | Use it when | What you install |
-| --- | --- | --- |
-| Codex skill | You want Codex to keep a long-running conversation stable | The repository folder as one skill named `ach` |
-| CLI | You want a workspace to have validatable recovery state | The Node CLI command `ach` |
-
-Other agent clients can still use ACH through the CLI and state contract, but
-they do not automatically get Codex skill behavior unless they support Codex
-skills.
-
-One-line installs are listed in [install](docs/install.md).
-
-## Quick Start
-
-Try the formal state contract from the repository root:
+**As a CLI** — give a workspace recoverable state:
 
 ```bash
-npm test
-npm run demo
-node bin/ach.js validate examples/fixtures/valid-basic
-node bin/ach.js handoff demo-task --root examples/fixtures/valid-basic
+ach init my-long-task          # create the minimal formal state root
+ach validate --task my-long-task
+ach handoff my-long-task       # derive a compact handoff from state
+ach pause my-long-task         # status + write-closure check + handoff
+ach resume my-long-task        # check recovery readiness
 ```
 
-Create a new state root in your own workspace:
+ACH starts in `guard-mode`. It enters `continuity-mode` only when the task needs
+recovery, handoff, a formal state root, or cross-window continuation.
 
-```bash
-node bin/ach.js init my-long-task
-node bin/ach.js validate --task my-long-task
-node bin/ach.js preflight my-long-task
-```
+> Full command reference: [`docs/cli.md`](docs/cli.md) ·
+> install paths: [`docs/install.md`](docs/install.md) ·
+> before/after proof: [`docs/demo.md`](docs/demo.md).
 
-Install the repository as one Codex skill named `ach` when you want Codex
-client conversations to use the same continuity rules:
+## Core concepts
 
-```text
-Use ACH for this task.
-```
+For readers who want to actually use it, the recovery vocabulary in one place:
 
-ACH starts in `guard-mode` by default. It enters `continuity-mode` only when the
-task needs recovery, handoff, a formal state root, or cross-window continuation.
+| Concept | What it holds |
+| --- | --- |
+| `active-context` | the current route, active constraints, artifacts, blockers, and read order |
+| `branch-attempt-ledger` | tried routes, competing assumptions, rejected/downgraded forks |
+| `artifact-provenance-index` | reusable outputs, sources, dependencies, validity, replacements |
+| `state-relation-index` | dependencies, conflicts, supersessions, invalidations, correction impact |
+| `compiled-lineage` | the durable reasoning for why the current route exists |
+| write-to-use closure | a write counts only when future recovery can find and use it |
 
-For exact install paths, see [install](docs/install.md).
-For a fuller setup path, see [quickstart](docs/quickstart.md).
-For the before/after recovery proof, see [demo](docs/demo.md).
-For command details, see [CLI docs](docs/cli.md) and
-[error codes](docs/error-codes.md).
-For host-tool notes, see [integrations](docs/integrations/README.md).
-
-## What You Get
-
-ACH has one public entry:
-
-- `ach`: the user-facing Agent Continuity Harness
-
-In Codex, ACH also translates common task-control language into stable
-workflows:
-
-- **status / progress / what next**: recover from formal state internally and
-  render only the current route, usable state, blockers, active constraints, and
-  next action.
-- **continue / resume / keep going**: resolve the bound task, preflight the
-  state root, read only the additionally needed state, and continue from the
-  recovered point.
-- **record / checkpoint / remember this**: route the durable state effect to the
-  smallest appropriate target, then validate or check write closure when
-  practical.
-- **correct / revise / self-check drift**: identify the changed assumption,
-  downgrade or supersede stale state, and continue from the corrected recovery
-  path.
-- **pause / hand off / next window**: update current recovery state, check that
-  durable writes are usable, and provide a compact resume package rather than a
-  raw state dump.
-
-The formal state root starts with four recovery-core files plus
-`state-manifest.json`, and can grow only when the task complexity justifies it:
-
-- Complex state externalization is for tasks with competing hypotheses,
-  multiple route attempts, reusable artifacts, or correction impact that would
-  make the core files noisy. The core files stay concise and current; complex
-  history moves into indexed supplemental documents so old branches do not gain
-  false authority during recovery.
-- `active-context`: current route, active constraints, artifacts, blockers, and
-  read order for complex tasks.
-- `branch-attempt-ledger`: tried routes, competing assumptions, rejected or
-  downgraded branches, and diagnostic history.
-- `artifact-provenance-index`: reusable outputs, source paths, dependencies,
-  status, and replacement links.
-- `state-relation-index`: typed dependencies, conflicts, supersessions,
-  invalidations, and correction impact.
-- `compiled-lineage`: durable reasoning for why the current route exists.
-
-The intended recovery rule is simple: read `active-context` for what is current,
-read `branch-attempt-ledger` only when tracing old hypotheses or route attempts,
-read `artifact-provenance-index` when deciding whether an output is still valid,
-and read `state-relation-index` when a correction may affect related state.
-
-ACH includes a write-to-use closure rule: a state write is not considered done
-just because a file changed. Future recovery must be able to find and use the
-effect through the default read path, active-context, manifest metadata, or the
-appropriate supplemental index.
-
-ACH now also includes a CLI:
-
-- `ach init`: create the minimum formal state root
-- `ach bind`: bind a task key to an existing state root
-- `ach list` / `ach tasks`: list bound tasks and their validation state
-- `ach health`: fail when any bound task is invalid
-- `ach validate`: check binding and state-root integrity
-- `ach checkpoint`: append controlled updates to a state file
-- `ach record`: append structured decisions, constraints, pending items, or goal notes
-- `ach status`: extract the compact current task view for agent rendering
-- `ach check-write`: check whether durable writes are visible to future recovery
-- `ach handoff`: derive handoff text from formal state
-- `ach pause`: combine status, write-closure check, and compact handoff
-- `ach preflight` / `ach resume`: check recovery readiness
-- `ach add-supplemental`: create and register standard supplemental state docs
-- `ach artifact check/add`: validate and append artifact provenance entries
-- `ach repair --safe`: apply only safe mechanical state-root repairs
-
-Internally, ACH has two modes:
-
-- `guard-mode`: lightweight drift control for normal multi-turn work
-- `continuity-mode`: formal state, handoff, recovery, and cross-window continuation
-
-You do not need to choose between internal modules. Ask for ACH, and let the
-harness decide whether the current task should stay lightweight or move into
-formal continuity.
+Recovery rule of thumb: read `active-context` for what's current; read the
+`branch-attempt-ledger` only when tracing old hypotheses; read the
+`artifact-provenance-index` when judging whether an output is still valid; read
+the `state-relation-index` when a correction might affect related state.
 
 ## Examples
-
-- [Drift recovery](examples/01-drift-recovery.md)
-- [Window handoff](examples/02-window-handoff.md)
-- [Long-task checkpoint](examples/03-long-task-checkpoint.md)
-- [When not to use ACH](examples/04-when-not-to-use.md)
-- [Transcript-style demo](examples/06-transcript-style-demo.md)
-- [Recovery failure without ACH](examples/07-recovery-failure.md)
-- [Recovery with ACH](examples/08-recovery-with-ach.md)
 
 Each example shows the failure pattern first, then the ACH behavior that keeps
 the task coherent.
 
-## How ACH Differs
+- [Drift recovery](examples/01-drift-recovery.md)
+- [Window handoff](examples/02-window-handoff.md)
+- [Long-task checkpoint](examples/03-long-task-checkpoint.md)
+- [When *not* to use ACH](examples/04-when-not-to-use.md)
+- [Recovery failure without ACH](examples/07-recovery-failure.md)
+- [Recovery with ACH](examples/08-recovery-with-ach.md)
 
-ACH is designed to complement existing AI coding tools and agent workflows.
+## When to use it — and when not to
 
-| Tool or pattern | What it is good at | What ACH adds |
+**Use ACH when you are thinking:**
+
+- "This task will continue later, and I don't want to re-explain it."
+- "The conversation is starting to drift — stabilize the boundary first."
+- "I need to move this work into a new chat without losing state."
+- "Someone else may have to take this over from the current point."
+
+**Do not use ACH** for one-shot questions, simple edits, short lookups, or any
+task where the next step is already obvious and low-risk. Formal state you don't
+need is just overhead.
+
+## How ACH differs
+
+ACH is meant to complement existing tools, not replace them.
+
+| Tool or pattern | Good at | What ACH adds |
 | --- | --- | --- |
-| `AGENTS.md` | Project-level instructions for coding agents | Runtime continuity rules for long tasks |
-| Prompt templates | Reusable wording | Drift, handoff, and recovery decisions |
-| Agent frameworks | Building and running agents | Collaboration continuity inside agent work |
-| Memory systems | Storing facts or context | Deciding what state must be formalized and when |
+| `AGENTS.md` | project-level instructions for agents | runtime continuity rules for long tasks |
+| Prompt templates | reusable wording | drift, handoff, and recovery *decisions* |
+| Agent frameworks | building and running agents | continuity *inside* the work |
+| Memory systems | storing facts/context | deciding *what* state must be formalized, and *when* |
 
-See [FAQ](docs/faq.md) for common comparison questions.
+See [`docs/faq.md`](docs/faq.md) for common comparison questions.
 
-## Project
+## Relationship to agent-drift-guard
 
-This repository is preparing its first public ACH release. See
-[changelog](CHANGELOG.md), [versioning](docs/releases/versioning.md), and
-[contributing](CONTRIBUTING.md).
+ACH is the heavyweight evolution of
+[**agent-drift-guard (adg)**](https://github.com/bagbag16/agent-drift-guard) — a
+lightweight guard for goal drift in multi-turn AI collaboration. adg is the
+proven, minimal entry point; ACH is what you reach for when the task grows into
+state loss, smuggled assumptions, and forking task definitions.
 
-## Repository Layout
+## Design & attribution
 
-- `SKILL.md`: the public ACH entry.
-- `docs/`: quickstart, FAQ, distribution notes, and reusable project template.
-- `scripts/`: demo and local Codex skill sync helpers.
-- `examples/`: before/after examples and a transcript-style demo.
-- `schemas/`: public JSON schemas for the state manifest and binding index.
-- `bin/ach.js`: the portable CLI for validation, handoff, and recovery checks.
-- `test/`: CLI tests and fixture checks.
-- `assets/state-templates/`: templates for formal continuity state.
-- `references/`: internal guard and continuity rules used by ACH.
-
-## Design Principles
-
-- One formal project identity: Agent Continuity Harness.
-- One invocation shorthand: `ach`.
-- Lightweight by default.
-- Escalate only when continuity is actually needed.
-- Keep confirmed facts, assumptions, pending items, and decisions distinct.
-- Do not make users choose internal guard or continuity modules manually.
-- Do not create formal state unless the task needs recovery or handoff.
+The concept and design of ACH — the failure model, the guard/continuity split,
+the version-tree approach to task evolution, and the write-to-use closure rule —
+are by **bagbag16**, a game systems designer. The implementation was built with
+AI pair-programming from that design. ACH is a record of design judgment, not of
+hand-written code.
 
 ## License
 
