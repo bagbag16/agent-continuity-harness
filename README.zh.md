@@ -43,10 +43,10 @@ flowchart TD
 
 | 文件 | 用途 |
 | --- | --- |
-| `active-context` | 当前目标、路线、读取顺序和下一步 |
-| `branch-attempt-ledger` | 试过的路线、分叉、失败及其原因 |
-| `artifact-provenance-index` | 产物、证据来源、有效性和过期条件 |
-| `state-relation-index` | 依赖、冲突、取代关系和恢复链接 |
+| [active-context](./assets/state-templates/active-context.template.md) | 当前目标、路线、读取顺序和下一步 |
+| [branch-attempt-ledger](./assets/state-templates/branch-attempt-ledger.template.md) | 试过的路线、分叉、失败及其原因 |
+| [artifact-provenance-index](./assets/state-templates/artifact-provenance-index.template.md) | 产物、证据来源、有效性和过期条件 |
+| [state-relation-index](./assets/state-templates/state-relation-index.template.md) | 依赖、冲突、取代关系和恢复链接 |
 
 ## 快速开始
 
