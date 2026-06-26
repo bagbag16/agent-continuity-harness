@@ -43,10 +43,10 @@ Do not use ACH for short questions, simple edits, or tasks where the current cha
 
 | File | Purpose |
 | --- | --- |
-| `active-context` | Current goal, route, read order, and next action |
-| `branch-attempt-ledger` | Tried routes, forks, failures, and why they mattered |
-| `artifact-provenance-index` | Outputs, source evidence, validity, and expiry |
-| `state-relation-index` | Dependencies, conflicts, supersessions, and recovery links |
+| [active-context](./assets/state-templates/active-context.template.md) | Current goal, route, read order, and next action |
+| [branch-attempt-ledger](./assets/state-templates/branch-attempt-ledger.template.md) | Tried routes, forks, failures, and why they mattered |
+| [artifact-provenance-index](./assets/state-templates/artifact-provenance-index.template.md) | Outputs, source evidence, validity, and expiry |
+| [state-relation-index](./assets/state-templates/state-relation-index.template.md) | Dependencies, conflicts, supersessions, and recovery links |
 
 ## Quick Start
 
