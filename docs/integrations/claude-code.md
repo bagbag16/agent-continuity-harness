@@ -66,6 +66,10 @@ Behavior:
 - Fails open on unexpected errors. Environment knobs:
   `ACH_TASK_KEY` (pin one task), `ACH_STOP_HOOK_GRACE_MINUTES` (default 15),
   `ACH_STOP_HOOK_ACTIVE_HOURS` (default 24), `ACH_STOP_HOOK_DISABLE=1`.
+- Known scope limit: the gate looks for `.cca-bindings.json` in the session
+  cwd only — it does not walk up parent directories. Start the session at the
+  workspace root for the gate to apply; a session opened in a subdirectory is
+  silently ungated.
 
 `ach reconcile <task-key>` is also useful standalone: it derives drift from
 file mtimes — ground truth — instead of trusting what the agent says it did.
