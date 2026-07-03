@@ -15,10 +15,10 @@ flowchart TD
   G -->|"锚定目标、约束、弱假设"| W["正常推进"]
   W -->|"交接 / 恢复 / 跨窗口风险"| C["连续性模式（continuity-mode）"]
   C --> S["正式状态根"]
-  S --> A["active-context：当前路线"]
-  S --> B["branch-attempt-ledger：试过的路径"]
-  S --> P["artifact-provenance-index：产物证据"]
-  S --> R["state-relation-index：依赖关系"]
+  S --> A["current-goal：任务主轴与下一步"]
+  S --> B["confirmed-constraints：仍然生效的约束"]
+  S --> P["pending-items：未决事项及其影响"]
+  S --> R["decisions：决策及其依据"]
   R --> H["从状态恢复，而不是从聊天记录猜"]
 ```
 
@@ -41,16 +41,28 @@ flowchart TD
 
 ## 核心文件
 
+每个正式状态根包含四个恢复核心文件和一个机器可读的 manifest，`ach init` 会全部创建：
+
 | 文件 | 用途 |
 | --- | --- |
-| [active-context](./assets/state-templates/active-context.template.md) | 当前目标、路线、读取顺序和下一步 |
-| [branch-attempt-ledger](./assets/state-templates/branch-attempt-ledger.template.md) | 试过的路线、分叉、失败及其原因 |
-| [artifact-provenance-index](./assets/state-templates/artifact-provenance-index.template.md) | 产物、证据来源、有效性和过期条件 |
-| [state-relation-index](./assets/state-templates/state-relation-index.template.md) | 依赖、冲突、取代关系和恢复链接 |
+| [current-goal](./assets/state-templates/current-goal.template.md) | 当前任务主轴、阶段和下一步 |
+| [confirmed-constraints](./assets/state-templates/confirmed-constraints.template.md) | 已确认且仍然生效的约束 |
+| [pending-items](./assets/state-templates/pending-items.template.md) | 未决事项、影响范围、是否阻塞 |
+| [decisions](./assets/state-templates/decisions.template.md) | 做过的决策、改变了什么、依据是什么 |
+
+复杂任务可以通过 `ach add-supplemental` 追加可选的补充文档 —— [active-context](./assets/state-templates/active-context.template.md)、[branch-attempt-ledger](./assets/state-templates/branch-attempt-ledger.template.md)、[artifact-provenance-index](./assets/state-templates/artifact-provenance-index.template.md)、[state-relation-index](./assets/state-templates/state-relation-index.template.md)。详见[状态契约](./docs/state-contract.md)。
 
 ## 快速开始
 
-当连续性重要时这样要求：
+安装 CLI 并为一个任务建立状态：
+
+```bash
+npm install -g github:bagbag16/agent-continuity-harness
+ach init my-long-task
+ach status my-long-task
+```
+
+或者在对话里直接要求（当连续性重要时）：
 
 ```text
 Use ACH for this task. Start light, but create formal state if the work needs handoff, recovery, or cross-window continuation.
@@ -62,9 +74,13 @@ Use ACH for this task. Start light, but create formal state if the work needs ha
 - 只有任务真的需要时才升到正式状态。
 - 状态根成为恢复来源，而不是原始聊天记录。
 
+更多：[安装](./docs/install.md) | [快速上手](./docs/quickstart.md) | [CLI 参考](./docs/cli.md) | [FAQ](./docs/faq.md)
+
 ## 边界
 
 ACH 只负责连续性。它不替代产品判断、不替代任务专属验证，也不把每个任务都变成流程文档。当前上下文能干净收完的任务，应停留在守护模式。
+
+ACH 也不判断工作是否在朝目标收敛——那是语义治理，不是状态。对自治 loop，[loop-builder](https://github.com/bagbag16/loop-builder) 在 ACH 状态根之上设计这一层（验收标准、独立监管、停止条件）。
 
 ## 许可证
 

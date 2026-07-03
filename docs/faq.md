@@ -56,3 +56,22 @@ ACH is too heavy when the task is short, local, and low-risk.
 
 Use normal conversation for simple work. Use ACH when losing the task line would
 cost more than the overhead of stabilizing it.
+
+## Old tasks accumulate under `.cca-state/`. Can I delete them?
+
+Yes, once a task is genuinely finished and nothing references its state root.
+
+The rule "formal state roots are not silently deleted" protects *live*
+continuity: while a task can still be resumed, handed off, or audited, its
+state root and binding must stay. It is not a promise of permanent archival.
+
+To retire a finished task safely:
+
+1. Confirm the task is closed (no pending items that block, no planned resume).
+2. Remove its entry from `.cca-bindings.json`.
+3. Delete or archive `.cca-state/<task-key>/` in the same change, so the
+   binding index and the filesystem never disagree.
+
+If you might need the history later, move the state root into an archive
+folder instead of deleting it. What matters is that the binding index always
+reflects reality.

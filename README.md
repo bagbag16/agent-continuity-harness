@@ -15,10 +15,10 @@ flowchart TD
   G -->|"anchor goal, constraints, weak assumptions"| W["Continue normally"]
   W -->|"handoff / recovery / cross-window risk"| C["Continuity mode"]
   C --> S["Formal state root"]
-  S --> A["active-context: current route"]
-  S --> B["branch-attempt-ledger: tried paths"]
-  S --> P["artifact-provenance-index: outputs"]
-  S --> R["state-relation-index: dependencies"]
+  S --> A["current-goal: task axis and next step"]
+  S --> B["confirmed-constraints: active constraints"]
+  S --> P["pending-items: open items and impact"]
+  S --> R["decisions: decisions and their basis"]
   R --> H["Resume from state, not chat memory"]
 ```
 
@@ -41,16 +41,28 @@ Do not use ACH for short questions, simple edits, or tasks where the current cha
 
 ## Core Files
 
+Every formal state root contains four recovery-core files plus a machine-readable manifest. `ach init` creates all of them:
+
 | File | Purpose |
 | --- | --- |
-| [active-context](./assets/state-templates/active-context.template.md) | Current goal, route, read order, and next action |
-| [branch-attempt-ledger](./assets/state-templates/branch-attempt-ledger.template.md) | Tried routes, forks, failures, and why they mattered |
-| [artifact-provenance-index](./assets/state-templates/artifact-provenance-index.template.md) | Outputs, source evidence, validity, and expiry |
-| [state-relation-index](./assets/state-templates/state-relation-index.template.md) | Dependencies, conflicts, supersessions, and recovery links |
+| [current-goal](./assets/state-templates/current-goal.template.md) | Current task axis, phase, and next step |
+| [confirmed-constraints](./assets/state-templates/confirmed-constraints.template.md) | Constraints that are confirmed and still active |
+| [pending-items](./assets/state-templates/pending-items.template.md) | Open items, their impact, and whether they block progress |
+| [decisions](./assets/state-templates/decisions.template.md) | Decisions made, what they change, and their basis |
+
+Complex tasks can extend the root with optional supplemental documents — [active-context](./assets/state-templates/active-context.template.md), [branch-attempt-ledger](./assets/state-templates/branch-attempt-ledger.template.md), [artifact-provenance-index](./assets/state-templates/artifact-provenance-index.template.md), [state-relation-index](./assets/state-templates/state-relation-index.template.md) — via `ach add-supplemental`. See the [state contract](./docs/state-contract.md).
 
 ## Quick Start
 
-Ask for ACH when continuity matters:
+Install the CLI and create state for a task:
+
+```bash
+npm install -g github:bagbag16/agent-continuity-harness
+ach init my-long-task
+ach status my-long-task
+```
+
+Or ask for ACH in conversation when continuity matters:
 
 ```text
 Use ACH for this task. Start light, but create formal state if the work needs handoff, recovery, or cross-window continuation.
@@ -62,9 +74,13 @@ Expected behavior:
 - The agent escalates only when the task earns formal state.
 - The state root becomes the source of recovery, not the raw conversation.
 
+More: [Install](./docs/install.md) | [Quickstart](./docs/quickstart.md) | [CLI reference](./docs/cli.md) | [FAQ](./docs/faq.md)
+
 ## Boundary
 
 ACH manages continuity. It does not decide product strategy, replace task-specific validation, or make every task bureaucratic. If the work can finish cleanly in the current context, ACH should stay in guard mode.
+
+ACH also does not judge whether the work is converging on its goal — that is semantic governance, not state. For autonomous loops, [loop-builder](https://github.com/bagbag16/loop-builder) designs that layer (acceptance criteria, independent supervision, stop conditions) on top of an ACH state root.
 
 ## License
 
