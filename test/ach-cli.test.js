@@ -619,3 +619,118 @@ test("documented error codes cover CLI emitted codes", () => {
     assert.match(docsText, new RegExp(`### \`${code}\``), `${code} is missing from docs/error-codes.md`);
   }
 });
+
+test("reconcile reports drift when a workspace file is newer than the state root", () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), "ach-reconcile-"));
+  const init = run(["init", "demo-task", "--root", temp]);
+  assert.equal(init.status, 0, init.stderr || init.stdout);
+
+  const workFile = path.join(temp, "work.txt");
+  fs.writeFileSync(workFile, "hello", "utf8");
+  const future = new Date(Date.now() + 60000);
+  fs.utimesSync(workFile, future, future);
+
+  const result = run(["reconcile", "demo-task", "--root", temp, "--json"]);
+  assert.equal(result.status, 1, result.stderr || result.stdout);
+  const parsed = JSON.parse(result.stdout);
+  assert.equal(parsed.ok, false);
+  assert.equal(parsed.drift_file_count, 1);
+  assert.equal(parsed.drift_examples[0].path, "work.txt");
+});
+
+test("reconcile is clean after the state root catches up", () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), "ach-reconcile-"));
+  const init = run(["init", "demo-task", "--root", temp]);
+  assert.equal(init.status, 0, init.stderr || init.stdout);
+
+  fs.writeFileSync(path.join(temp, "work.txt"), "hello", "utf8");
+  const goal = path.join(temp, ".cca-state", "demo-task", "current-goal.md");
+  const future = new Date(Date.now() + 60000);
+  fs.utimesSync(goal, future, future);
+
+  const result = run(["reconcile", "demo-task", "--root", temp, "--json"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const parsed = JSON.parse(result.stdout);
+  assert.equal(parsed.ok, true);
+  assert.equal(parsed.drift_file_count, 0);
+});
+
+test("reconcile respects grace minutes", () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), "ach-reconcile-"));
+  const init = run(["init", "demo-task", "--root", temp]);
+  assert.equal(init.status, 0, init.stderr || init.stdout);
+
+  const workFile = path.join(temp, "work.txt");
+  fs.writeFileSync(workFile, "hello", "utf8");
+  const slightlyLater = new Date(Date.now() + 60000);
+  fs.utimesSync(workFile, slightlyLater, slightlyLater);
+
+  const result = run(["reconcile", "demo-task", "--root", temp, "--grace-minutes", "10", "--json"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(JSON.parse(result.stdout).ok, true);
+});
+
+test("stop hook exits 0 when stop_hook_active is set", () => {
+  const hook = path.join(repoRoot, "scripts", "hooks", "claude-code-stop-hook.js");
+  const result = spawnSync(process.execPath, [hook], {
+    encoding: "utf8",
+    input: JSON.stringify({ stop_hook_active: true }),
+  });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+});
+
+test("stop hook blocks with exit 2 on drift and passes after checkpoint", () => {
+  const hook = path.join(repoRoot, "scripts", "hooks", "claude-code-stop-hook.js");
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), "ach-stophook-"));
+  const init = run(["init", "demo-task", "--root", temp]);
+  assert.equal(init.status, 0, init.stderr || init.stdout);
+
+  const workFile = path.join(temp, "work.txt");
+  fs.writeFileSync(workFile, "hello", "utf8");
+  const future = new Date(Date.now() + 60000);
+  fs.utimesSync(workFile, future, future);
+
+  const env = { ...process.env, ACH_STOP_HOOK_GRACE_MINUTES: "0", ACH_TASK_KEY: "demo-task" };
+  const blockedResult = spawnSync(process.execPath, [hook], {
+    encoding: "utf8",
+    env,
+    input: JSON.stringify({ cwd: temp, stop_hook_active: false }),
+  });
+  assert.equal(blockedResult.status, 2, blockedResult.stderr || blockedResult.stdout);
+  assert.match(blockedResult.stderr, /ACH stop gate/);
+  assert.match(blockedResult.stderr, /demo-task/);
+
+  const goal = path.join(temp, ".cca-state", "demo-task", "current-goal.md");
+  const later = new Date(Date.now() + 120000);
+  fs.utimesSync(goal, later, later);
+
+  const cleanResult = spawnSync(process.execPath, [hook], {
+    encoding: "utf8",
+    env,
+    input: JSON.stringify({ cwd: temp, stop_hook_active: false }),
+  });
+  assert.equal(cleanResult.status, 0, cleanResult.stderr || cleanResult.stdout);
+});
+
+test("stop hook skips dormant tasks", () => {
+  const hook = path.join(repoRoot, "scripts", "hooks", "claude-code-stop-hook.js");
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), "ach-stophook-"));
+  const init = run(["init", "demo-task", "--root", temp]);
+  assert.equal(init.status, 0, init.stderr || init.stdout);
+
+  const past = new Date(Date.now() - 72 * 3600000);
+  const stateDir = path.join(temp, ".cca-state", "demo-task");
+  for (const file of fs.readdirSync(stateDir)) {
+    fs.utimesSync(path.join(stateDir, file), past, past);
+  }
+  fs.writeFileSync(path.join(temp, "work.txt"), "hello", "utf8");
+
+  const env = { ...process.env, ACH_STOP_HOOK_GRACE_MINUTES: "0" };
+  delete env.ACH_TASK_KEY;
+  const result = spawnSync(process.execPath, [hook], {
+    encoding: "utf8",
+    env,
+    input: JSON.stringify({ cwd: temp, stop_hook_active: false }),
+  });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+});

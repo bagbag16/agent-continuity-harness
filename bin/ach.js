@@ -64,6 +64,8 @@ function main() {
         return cmdStatus(args);
       case "check-write":
         return cmdCheckWrite(args);
+      case "reconcile":
+        return cmdReconcile(args);
       case "add-supplemental":
         return cmdAddSupplemental(args);
       case "artifact":
@@ -502,6 +504,138 @@ function cmdCheckWrite(args) {
     renderCheckWrite(payload);
   }
   return payload.ok ? 0 : 1;
+}
+
+const RECONCILE_EXCLUDED_DIRS = new Set([
+  ".git",
+  ".hg",
+  ".svn",
+  "node_modules",
+  ".cca-state",
+  "__pycache__",
+]);
+
+function cmdReconcile(args) {
+  const taskKey = requireArg(args._[0] || args.task, "task key");
+  const root = normalizeRoot(args.root);
+  const payload = buildReconcilePayload(root, taskKey, {
+    graceMinutes: args.grace_minutes !== undefined ? Number(args.grace_minutes) : 0,
+    scope: args.scope,
+    maxList: args.max_list !== undefined ? Number(args.max_list) : 10,
+    maxScan: args.max_scan !== undefined ? Number(args.max_scan) : 50000,
+  });
+
+  if (args.json) {
+    console.log(JSON.stringify(payload, null, 2));
+  } else {
+    renderReconcile(payload);
+  }
+  return payload.ok ? 0 : 1;
+}
+
+function buildReconcilePayload(root, taskKey, options) {
+  const binding = getBinding(root, taskKey);
+  const stateRoot = resolveInside(root, binding.formal_state_root);
+  if (!fs.existsSync(stateRoot)) {
+    throw new CliError(`Formal state root does not exist: ${stateRoot}`, 1);
+  }
+
+  const graceMinutes = Number.isFinite(options.graceMinutes) ? Math.max(0, options.graceMinutes) : 0;
+  const stateLastModifiedMs = newestMtimeUnder(stateRoot);
+  const thresholdMs = stateLastModifiedMs + graceMinutes * 60000;
+  const scanRoot = options.scope ? resolveInside(root, options.scope) : root;
+
+  const scan = { count: 0, truncated: false, maxScan: Number.isFinite(options.maxScan) ? options.maxScan : 50000 };
+  const drift = [];
+  collectDrift(scanRoot, root, stateRoot, thresholdMs, drift, scan);
+  drift.sort((a, b) => b.modifiedMs - a.modifiedMs);
+
+  const maxList = Number.isFinite(options.maxList) ? Math.max(1, options.maxList) : 10;
+  return {
+    task_key: taskKey,
+    formal_state_root: toPosix(path.relative(root, stateRoot)),
+    state_last_modified: new Date(stateLastModifiedMs).toISOString(),
+    grace_minutes: graceMinutes,
+    scan_root: toPosix(path.relative(root, scanRoot)) || ".",
+    scanned_files: scan.count,
+    scan_truncated: scan.truncated,
+    drift_file_count: drift.length,
+    drift_examples: drift.slice(0, maxList).map((entry) => ({
+      path: toPosix(path.relative(root, entry.path)),
+      modified: new Date(entry.modifiedMs).toISOString(),
+    })),
+    ok: drift.length === 0,
+  };
+}
+
+function newestMtimeUnder(dir) {
+  let newest = 0;
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.isSymbolicLink()) continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      newest = Math.max(newest, newestMtimeUnder(full));
+    } else if (entry.isFile()) {
+      newest = Math.max(newest, fs.lstatSync(full).mtimeMs);
+    }
+  }
+  return newest;
+}
+
+function collectDrift(dir, root, stateRoot, thresholdMs, drift, scan) {
+  if (scan.truncated) return;
+  if (path.resolve(dir) === path.resolve(stateRoot)) return;
+
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch (error) {
+    return;
+  }
+
+  for (const entry of entries) {
+    if (scan.truncated) return;
+    if (entry.isSymbolicLink()) continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (RECONCILE_EXCLUDED_DIRS.has(entry.name)) continue;
+      collectDrift(full, root, stateRoot, thresholdMs, drift, scan);
+    } else if (entry.isFile()) {
+      if (entry.name === ".cca-bindings.json" && path.dirname(full) === path.resolve(root)) continue;
+      scan.count += 1;
+      if (scan.count > scan.maxScan) {
+        scan.truncated = true;
+        return;
+      }
+      const modifiedMs = fs.lstatSync(full).mtimeMs;
+      if (modifiedMs > thresholdMs) {
+        drift.push({ path: full, modifiedMs });
+      }
+    }
+  }
+}
+
+function renderReconcile(payload) {
+  if (payload.ok) {
+    console.log(`Reconcile ${payload.task_key}: CLEAN. No workspace files modified after the formal state root.`);
+    console.log(`State last modified: ${payload.state_last_modified} (scanned ${payload.scanned_files} files under ${payload.scan_root})`);
+    if (payload.scan_truncated) {
+      console.log("WARN: scan truncated at file cap; result may be incomplete. Narrow with --scope.");
+    }
+    return;
+  }
+  console.log(`Reconcile ${payload.task_key}: DRIFT. ${payload.drift_file_count} file(s) modified after the formal state root.`);
+  console.log(`State last modified: ${payload.state_last_modified} (grace ${payload.grace_minutes}m, scanned ${payload.scanned_files} files under ${payload.scan_root})`);
+  console.log("Newest drifted files:");
+  for (const example of payload.drift_examples) {
+    console.log(`  - ${example.path} (${example.modified})`);
+  }
+  if (payload.scan_truncated) {
+    console.log("WARN: scan truncated at file cap; drift count is a lower bound. Narrow with --scope.");
+  }
+  console.log("The state root is behind reality. Record what changed, e.g.:");
+  console.log(`  ach checkpoint ${payload.task_key} --file pending-items --append "<what changed and why>"`);
 }
 
 function cmdAddSupplemental(args) {
@@ -2108,6 +2242,7 @@ const CLI_USAGE_LINES = [
   "ach record <task-key> --type <type> --text <text> [--json]",
   "ach handoff <task-key> [--compact] [--full] [--json]",
   "ach pause <task-key> [--json]",
+  "ach reconcile <task-key> [--root <workspace>] [--grace-minutes <n>] [--scope <path>] [--max-list <n>] [--max-scan <n>] [--json]",
   "ach preflight <task-key> [--json]",
   "ach resume <task-key> [--json]",
   "ach status <task-key> [--brief] [--json]",

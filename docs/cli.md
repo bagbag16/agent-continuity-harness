@@ -249,6 +249,36 @@ read path, mark it as recovery-blocking, register missing artifact-index
 validators, and connect artifact validators to active-context. It does not
 rewrite user decisions, constraints, pending items, or project-domain content.
 
+### `ach reconcile <task-key>`
+
+Compare the formal state root against the workspace's ground truth instead of
+trusting self-reported progress. Any file modified after the newest state-root
+file (plus an optional grace window) counts as drift: work happened that the
+state does not record.
+
+```bash
+node bin/ach.js reconcile demo-task
+node bin/ach.js reconcile demo-task --grace-minutes 15 --json
+node bin/ach.js reconcile demo-task --scope src --max-list 20
+```
+
+Options: `--grace-minutes <n>` (default 0), `--scope <path>` (limit the scan
+to a subdirectory of the workspace), `--max-list <n>` (drift examples in the
+output, default 10), `--max-scan <n>` (file-count cap, default 50000; the
+result is marked truncated when hit).
+
+Scanning skips `.git`, `node_modules`, `.cca-state`, VCS internals, symlinks
+and junctions, and the workspace binding index. Exit `0` means clean, `1`
+means drift.
+
+`reconcile` is the derived-evidence layer of ACH: the state files are written
+by the agent, but drift is computed from file mtimes the agent cannot
+rationalize away. The bundled Claude Code stop gate
+(`scripts/hooks/claude-code-stop-hook.js`, see
+[integrations/claude-code](integrations/claude-code.md)) turns this check into
+a mechanical door: a session cannot end while an active task's state is behind
+reality.
+
 ## Exit Codes
 
 - `0`: state is valid or command completed

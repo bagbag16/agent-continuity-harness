@@ -76,6 +76,20 @@ Use ACH for this task. Start light, but create formal state if the work needs ha
 
 更多：[安装](./docs/install.md) | [快速上手](./docs/quickstart.md) | [CLI 参考](./docs/cli.md) | [FAQ](./docs/faq.md)
 
+## 强制等级
+
+依赖 agent"记得遵守"的规则是最弱的规则。ACH 给每个机制标注真实的强制方式，并诚实承认哪些仍停留在散文层：
+
+| 机制 | 等级 | 由什么强制 |
+| --- | --- | --- |
+| 状态根形状、绑定、manifest 完整性 | **门禁** | `ach validate` / `preflight` 失败时阻断交接与恢复 |
+| 状态新鲜度（现实被记录了吗） | **推导 + 门禁** | `ach reconcile` 从文件 mtime 推导漂移——地面真相，不信自报；自带的 [Claude Code 停止门禁](./docs/integrations/claude-code.md#stop-gate-mechanical-enforcement)在活跃任务状态过期时拒绝结束会话 |
+| 产物溯源一致性 | **推导** | `ach artifact check` 用 active context 对照校验索引 |
+| 任务中途 checkpoint 纪律 | **散文** | SKILL.md 约定——已知弱点，由停止门禁部分补偿 |
+| 守护模式→连续性模式的升级判断 | **散文** | SKILL.md 约定——有意留给判断 |
+
+等级说明：**门禁** = 机械阻断；**推导** = 从 agent 无法改写的证据计算；**审计** = 事后度量；**散文** = 依赖 agent 遵守指令。
+
 ## 边界
 
 ACH 只负责连续性。它不替代产品判断、不替代任务专属验证，也不把每个任务都变成流程文档。当前上下文能干净收完的任务，应停留在守护模式。

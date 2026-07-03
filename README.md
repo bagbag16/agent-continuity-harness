@@ -76,6 +76,20 @@ Expected behavior:
 
 More: [Install](./docs/install.md) | [Quickstart](./docs/quickstart.md) | [CLI reference](./docs/cli.md) | [FAQ](./docs/faq.md)
 
+## Enforcement Levels
+
+A rule that relies on the agent remembering it is the weakest kind of rule. ACH labels every mechanism by how it is actually enforced, and is honest about which ones are still prose:
+
+| Mechanism | Level | Enforced by |
+| --- | --- | --- |
+| State root shape, bindings, manifest integrity | **gate** | `ach validate` / `preflight` block handoff and resume on failure |
+| State freshness (is reality recorded?) | **derived + gate** | `ach reconcile` computes drift from file mtimes — ground truth, not self-report; the bundled [Claude Code stop gate](./docs/integrations/claude-code.md#stop-gate-mechanical-enforcement) refuses to end a session while an active task's state is stale |
+| Artifact provenance consistency | **derived** | `ach artifact check` validates the index against active context |
+| Mid-task checkpoint discipline | **prose** | SKILL.md convention — known weakness, partially compensated by the stop gate |
+| Guard-mode → continuity-mode escalation judgment | **prose** | SKILL.md convention — deliberately left to judgment |
+
+Levels: **gate** = mechanically blocked; **derived** = computed from evidence the agent cannot rewrite; **audit** = measured after the fact; **prose** = relies on the agent following instructions.
+
 ## Boundary
 
 ACH manages continuity. It does not decide product strategy, replace task-specific validation, or make every task bureaucratic. If the work can finish cleanly in the current context, ACH should stay in guard mode.
